@@ -11,8 +11,9 @@ pub fn initialize_clip_config_table(conn: &Connection) -> Result<(), String> {
         BOTTOM INTEGER NOT NULL,
         LEFT INTEGER NOT NULL,
         RADIUS INTEGER NOT NULL,
-        THUMBNAIL TEXT,
-        CREATE_AT INTEGER
+        THUMBNAIL BLOB,
+        SOURCE TEXT,
+        CREATE_AT TEXT
     );";
     match conn.execute(stmt) {
         Ok(_) => Ok(()),

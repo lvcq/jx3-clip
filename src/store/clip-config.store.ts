@@ -1,10 +1,13 @@
+import { ClipConfig, get_all_clip_config } from "@backend/apis/clip_config";
 import { BodyType } from "@data/body-type";
 import { Part } from "@data/part";
 import { atom } from "jotai";
 
-export const clipExampleImage = atom<string>("");
+export const configIdAtom = atom<number|null>(null);
 export const bodyType = atom<BodyType>(BodyType.MALE);
 export const partAtom = atom<Part>(Part.HAIR);
+export const SourceAtom = atom<string>("");
+export const configNameAtom = atom<string>("");
 export const clipParamsAtom = atom({
     top: 0,
     right: 0,
@@ -47,3 +50,5 @@ export const clipRadiusAtom = atom<number, number>((get) => get(clipParamsAtom).
         radius
     });
 });
+
+export const allClipConfigAtom = atom<Array<ClipConfig>>([]);

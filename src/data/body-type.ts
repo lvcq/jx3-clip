@@ -40,3 +40,12 @@ export function getBodyType(num: number): BodyType | null {
             return null;
     }
 }
+
+export function getBodyTypeLabel(type: BodyType): string | null {
+    let item = bodyTypeRefs.find(item => item.key === type);
+    if (item) {
+        return item.label;
+    } else {
+        return null;
+    }
+}

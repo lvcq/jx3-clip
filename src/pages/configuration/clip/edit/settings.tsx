@@ -1,17 +1,32 @@
 import { UploadBtn } from "./upload-btn";
 import { useAtom } from "jotai";
-import { bodyType, clipBottomAtom, clipExampleImage, clipLeftAtom, clipRadiusAtom, clipRightAtom, clipTopAtom, partAtom } from "@store/clip-config.store"
+import {
+    allClipConfigAtom,
+    bodyType,
+    clipBottomAtom,
+    clipLeftAtom,
+    clipRadiusAtom,
+    clipRightAtom,
+    clipTopAtom,
+    configIdAtom,
+    configNameAtom,
+    partAtom,
+    SourceAtom
+} from "@store/clip-config.store"
 import { DividerH } from "@components/divider-h";
 import { SubTitle } from "@components/sub-title";
 import { FormItem } from "@components/form-item";
 import { bodyTypeRefs, getBodyType } from "@data/body-type";
 import { JSX } from "preact";
 import { getPart, partRefs } from "@data/part";
+import { create_clip_config, get_all_clip_config, update_clip_config } from "@apis/clip_config";
+import { globalMessageAtom } from "@store/message.store";
 interface SettingsProps {
 
 }
 export function Settings<FC>({ }: SettingsProps) {
-    const [exampleImageUrl, setExampleImageUrl] = useAtom(clipExampleImage);
+    const [source, updateSource] = useAtom(SourceAtom);
+    const [configName, updateConfigName] = useAtom(configNameAtom);
     const [bt, btUpdate] = useAtom(bodyType);
     const [part, partUpdate] = useAtom(partAtom);
     const [top, updateTop] = useAtom(clipTopAtom);
@@ -19,9 +34,12 @@ export function Settings<FC>({ }: SettingsProps) {
     const [bottom, updateBottom] = useAtom(clipBottomAtom);
     const [left, updateLeft] = useAtom(clipLeftAtom);
     const [radius, updateRadius] = useAtom(clipRadiusAtom);
+    const [, updateMessage] = useAtom(globalMessageAtom);
+    const [, updateClipList] = useAtom(allClipConfigAtom);
+    const [configId,updateConfigId] = useAtom(configIdAtom);
 
-    function handleImageChange(url: string) {
-        setExampleImageUrl(url);
+    function handleImageChange(source: string) {
+        updateSource(source);
     }
 
     function handleBodyTypeChange(evt: JSX.TargetedEvent<HTMLSelectElement>) {
@@ -72,21 +90,83 @@ export function Settings<FC>({ }: SettingsProps) {
         updateRadius(num);
     }
 
-    return <div className="h-full p-3">
+    async function handleSave() {
+        try {
+            if (!configName.trim()) {
+                return;
+            }
+            if (!source) {
+                return;
+            }
+            if(configId===null){
+                await handle_create_clip_config();
+            }else{
+                await handle_update_clip_config();
+            }
+
+            const list = await get_all_clip_config();
+            updateClipList(list);
+            updateMessage({
+                type: 'success',
+                message: "编辑截图配置成功"
+            })
+        } catch (err) {
+            console.log(err);
+            updateMessage({
+                type: 'error',
+                message: "编辑截图配置失败"
+            })
+        }
+    }
+
+    async function handle_create_clip_config() {
+       return await create_clip_config({
+            name: configName,
+            body_type: bt,
+            part: part,
+            top,
+            right,
+            bottom,
+            left,
+            radius,
+            source
+        });
+    }
+
+    async function handle_update_clip_config() {
+        return await update_clip_config({
+            id:configId as number,
+            name: configName,
+            body_type: bt,
+            part: part,
+            top,
+            right,
+            bottom,
+            left,
+            radius,
+            source
+        })
+    }
+
+    function handleGoBack() {
+        history.back();
+    }
+
+    return <div className="h-full p-3 flex flex-col overflow-y-auto">
         <UploadBtn onChange={handleImageChange} />
         <DividerH />
         <SubTitle>分类设置</SubTitle>
         <FormItem label="体型">
             <select className="w-full" onChange={handleBodyTypeChange}>
                 {
-                    bodyTypeRefs.map((item) => <option key={item.key} value={item.key} checked={bt === item.key}>{item.label}</option>)
+                    bodyTypeRefs.map((item) => <option key={item.key} value={item.key} selected={bt === item.key}>{item.label}</option>)
                 }
             </select>
         </FormItem>
         <FormItem label="部位">
             <select className="w-full" onChange={handlePartChange}>
                 {
-                    partRefs.map(item => <option key={item.key} value={item.key} checked={part === item.key}>{item.label}</option>)
+                    partRefs.map(item => <option key={item.key} value={item.key} selected={part === item.key}>{item.label}</option>)
                 }
             </select>
         </FormItem>
@@ -107,5 +187,20 @@ export function Settings<FC>({ }: SettingsProps) {
         <FormItem label="圆角">
             <input className="w-full p-1" value={radius} type="number" onChange={handleRadiusChange} />
         </FormItem>
+        <DividerH />
+        <SubTitle>基础信息</SubTitle>
+        <FormItem label="名称">
+            <input className="w-full p-1" value={configName} onChange={(evt) => {
+                const value = evt.currentTarget.value;
+                updateConfigName(value);
+            }} />
+        </FormItem>
+        <div className="flex-1">
+        </div>
+        <DividerH />
+        <div className="p-3 text-right">
+            <button onClick={handleGoBack} className="px-2 py-px rounded bg-primary text-white hover:ring-2 ring-blue-300">返回</button>
+            <button onClick={handleSave} className="ml-2 px-2 py-px rounded bg-primary text-white hover:ring-2 ring-blue-300">保存</button>
+        </div>
     </div>
 }

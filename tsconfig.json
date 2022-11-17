@@ -20,6 +20,8 @@
     "paths": {
       "@backend":["./src/backend"],
       "@backend/*":["./src/backend/*"],
+      "@apis":["./src/backend/apis"],
+      "@apis/*":["./src/backend/apis/*"],
       "@components/*":["./src/components/*"],
       "@pages/*":["./src/pages/*"],
       "@store/*":["./src/store/*"],

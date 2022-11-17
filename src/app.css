@@ -2,11 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-html,body{
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
 }
-#app{
-height: 100%;
+
+#app {
+  height: 100%;
+}
+
+.global-message-info {
+  @apply text-gray-600;
+}
+
+.global-message-success {
+  @apply text-green-500;
+}
+
+.global-message-warning {
+  @apply text-orange-500;
+}
+
+.global-message-info {
+  @apply text-red-500;
 }

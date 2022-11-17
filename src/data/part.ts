@@ -28,3 +28,12 @@ export function getPart(num: number): Part | null {
             return null;
     }
 }
+
+export function getPartLabel(type: Part): string | null {
+    let item = partRefs.find(item => item.key === type);
+    if (item) {
+        return item.label;
+    } else {
+        return null;
+    }
+}

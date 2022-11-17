@@ -34,5 +34,5 @@ macro_rules! menu_keys {
     }
 }
 
-menu_keys!(ClipConfig, TVE);
+menu_keys!(ClipConfig, CreateNewProject);
 

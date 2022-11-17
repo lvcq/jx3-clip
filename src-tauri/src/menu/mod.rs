@@ -23,13 +23,13 @@ pub fn create_menu() -> Menu {
 pub fn menu_handler(event: WindowMenuEvent) {
     let window = event.window();
     match event.menu_item_id().parse::<MenuKeys>().unwrap() {
-        MenuKeys::ClipConfig => {
+        MenuKeys::ClipConfig | MenuKeys::CreateNewProject => {
             window
                 .emit::<MenuMessage>(
                     "backMessage",
                     MenuMessage {
                         event_type: "menuChange".to_string(),
-                        next: MenuKeys::ClipConfig.into(),
+                        next: event.menu_item_id().to_string(),
                     },
                 )
                 .unwrap();

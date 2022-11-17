@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+src-tauri/database
+test.sql
+src-tauri/test_dir
+src-tauri/clip_source

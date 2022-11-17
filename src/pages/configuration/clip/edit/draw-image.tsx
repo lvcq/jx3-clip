@@ -1,4 +1,5 @@
-import { clipExampleImage, clipParamsAtom } from "@store/clip-config.store";
+import { clipParamsAtom, SourceAtom } from "@store/clip-config.store";
+import { readBinaryFile } from "@tauri-apps/api/fs";
 import { drawRoundedRect } from "@utils/draw-2d";
 import { useAtom } from "jotai";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -7,18 +8,33 @@ interface DrawImageProps {
 
 }
 
-const bgColors = ["#333333", "#999999"]
+const bgColors = ["#333336", "#9a9999"]
 
 export function DrawImage<FC>({ }: DrawImageProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [source] = useAtom(SourceAtom);
     const monitor = useRef<number>(0);
     const [canvasWidth, setCanvasWidth] = useState(0);
     const [canvasHeight, setCanvasHeight] = useState(0);
     const canvasContext = useRef<CanvasRenderingContext2D | null>(null);
     const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
-    const [url] = useAtom(clipExampleImage)
+    const [url,updateUrl] = useState("");
     const [clipParams] = useAtom(clipParamsAtom);
     const urlRef = useRef(url);
+
+    useEffect(() => {
+        async function createSourceUrl() {
+            if (source) {
+                const image = await readBinaryFile(source as string);
+                const imageBlob = new Blob([image]);
+                const url = window.URL.createObjectURL(imageBlob);
+                updateUrl(url);
+            }else{
+                updateUrl("")
+            }
+        }
+        createSourceUrl();
+    }, [source]);
 
     useEffect(() => {
         function monitorCanvasSize() {

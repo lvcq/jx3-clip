@@ -3,7 +3,8 @@ import { Observable } from 'rxjs';
 import { MenuMessage } from './model';
 
 const menuMap={
-    ClipConfig:"/config/clip"
+    ClipConfig:"/config/clip",
+    CreateNewProject:"/project/edit"
 }
 
 export function start_listen_menu_message(obser: Observable<MenuMessage>) {
