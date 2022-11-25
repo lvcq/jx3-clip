@@ -6,7 +6,7 @@ interface FormItemProps {
 }
 export function FormItem<FC>({ children, label }: FormItemProps) {
     return <label className="flex items-center mb-2">
-        <span className="w-16">{label}:</span>
+        <span className="w-16">{label}{label ? ":" : null}</span>
         <div className="flex-1">{children}</div>
     </label>
 }

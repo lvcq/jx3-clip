@@ -5,7 +5,6 @@ import { Provider } from "jotai";
 import "./app.css";
 import { AppRouter } from "./router";
 import { GlobalMessage } from "@components/global-message";
-import { GlobalModal } from "@components/global-modal";
 
 export function App<FC>() {
 
@@ -20,7 +19,6 @@ export function App<FC>() {
     <Provider>
       <AppRouter />
       <GlobalMessage></GlobalMessage>
-      <GlobalModal></GlobalModal>
     </Provider>
   );
 }

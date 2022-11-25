@@ -4,6 +4,7 @@ import { allClipConfigAtom } from "@store/clip-config.store";
 import { useEffect } from "preact/hooks";
 import { get_all_clip_config } from "@backend/apis/clip_config";
 import { useAtom } from "jotai";
+import { Worktop } from "./worktop";
 
 interface ProjectEditPageProps {
     path?: string;
@@ -20,7 +21,9 @@ export function ProjectEditPage<FC>({ }: ProjectEditPageProps) {
     }, []);
     return <PageContainer>
         <div className="h-full flex overflow-hidden">
-            <div className="flex-1"></div>
+            <div className="flex-1 overflow-hidden">
+                <Worktop/>
+            </div>
             <div className="w-1/4 shadow p-4">
                 <Properties />
             </div>

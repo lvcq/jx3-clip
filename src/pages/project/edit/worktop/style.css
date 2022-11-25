@@ -1,0 +1,6 @@
+.draged-elm{
+    @apply opacity-60 border border-solid border-gray-300;
+}
+.drag-over{
+    @apply border border-dashed border-red-500;
+}
