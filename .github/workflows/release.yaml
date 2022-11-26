@@ -21,13 +21,15 @@ jobs:
           echo "using version tag ${GITHUB_REF:10}"
 
       # 根据查询到的版本号创建 release
-      - name: Create a Release
-        uses: elgohr/Github-Release-Action@v4
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          title: 'app ${{ steps.get_version.outputs.VERSION }}'
-
+          tag_name: '${{ steps.get_version.outputs.VERSION }}'
+          release_name: 'app ${{ steps.get_version.outputs.VERSION }}'
+          body: 'See the assets to download this version and install.'
   # 编译 Tauri
   build-tauri:
     needs: create-release
