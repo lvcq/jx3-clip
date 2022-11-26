@@ -19,7 +19,6 @@ jobs:
         shell: bash
         run: |
           echo "using version tag ${GITHUB_REF:10}"
-          echo "version::{GITHUB_REF:10}" >> $GITHUB_OUTPUT
 
       # 根据查询到的版本号创建 release
       - name: Create a Release
