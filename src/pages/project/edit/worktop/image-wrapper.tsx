@@ -50,6 +50,7 @@ export function ImageWrapper<FC>({ url, type, id, onMove }: ImageWrapperProps) {
     }
     function handleDrop(e: TargetedEvent<HTMLDivElement, DragEvent>) {
         e.stopPropagation();
+        e.preventDefault();
         if (dragged !== id && e.dataTransfer) {
             try {
                 let data = e.dataTransfer.getData('text/plain');
@@ -77,6 +78,6 @@ export function ImageWrapper<FC>({ url, type, id, onMove }: ImageWrapperProps) {
             <source srcset={url}></source>
             <img className="w-full" src={url} alt="" />
         </picture>
-        <div className="absolute top-0 right-0 bottom-0 left-0 z-10" onDrop={handleDrop}></div>
+        <div className="absolute top-0 right-0 bottom-0 left-0 z-10" onDrop={handleDrop} onDragOver={handleDragOver}></div>
     </div>
 }

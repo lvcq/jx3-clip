@@ -98,10 +98,8 @@ export function Properties<FC>() {
     }
 
     async function handleImageSelectOk() {
-        console.log("tttt")
         if (imageList.length > 0 && config) {
             if (config.id === -1 || config.id === -2) {
-                console.log(config);
                 await handleNoClipImage(config.id);
             } else {
                 let { top, right, bottom, left, radius } = config;
@@ -134,7 +132,7 @@ export function Properties<FC>() {
         let result: { url: string; key: string; }[] = [];
         let sha256 = forge.md.sha256.create();
         while (imageList.length > 0) {
-            let source = imageList.pop();
+            let source = imageList.shift();
             const image = await readBinaryFile(source as string);
             const imageBlob = new Blob([image]);
             const url = window.URL.createObjectURL(imageBlob);
