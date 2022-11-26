@@ -212,11 +212,11 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                             if (!savePath.endsWith(".png")) {
                                 savePath = `${savePath}.png`
                             }
-                            let preDir = getPreDirFormPath(savePath);
+                            let savePreDir = getPreDirFormPath(savePath);
                             updateProjectCache((preData: any) => {
                                 return {
                                     ...preData,
-                                    preDir
+                                    savePreDir
                                 }
                             });
                             const imgArr = new Uint8Array(await blob.arrayBuffer());

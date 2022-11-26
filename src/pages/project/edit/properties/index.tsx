@@ -24,6 +24,8 @@ import { Part } from "@data/part";
 import { PreView } from "../preview";
 import { homeDir } from '@tauri-apps/api/path';
 import { getPreDirFormPath } from "@utils/fileopt";
+import { readBinaryFile } from "@tauri-apps/api/fs";
+import { CommonProperties } from "./common-properties";
 
 
 export function Properties<FC>() {
@@ -44,6 +46,20 @@ export function Properties<FC>() {
     function handleConfigChange(evt: JSX.TargetedEvent<HTMLSelectElement>) {
         const value = evt.currentTarget.value;
         const num = parseInt(value, 10);
+        if (num === -1 || num === -2) {
+            updateConfig({
+                id: num,
+                body_type: -1,
+                part: -1,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                radius: 0,
+                name: ""
+            });
+            return;
+        }
         let selected = configList.find(item => item.id === num);
         updateConfig(selected)
     }
@@ -55,7 +71,7 @@ export function Properties<FC>() {
                 name: "图像",
                 extensions: ["png", "jpeg", "jpg"]
             }],
-            defaultPath: projectCache.savePreDir || await homeDir()
+            defaultPath: projectCache.preDir || await homeDir()
         });
         if (paths) {
             let path = ""
@@ -66,11 +82,11 @@ export function Properties<FC>() {
                 path = paths[0];
                 updateImageList(paths);
             }
-            let savePreDir = getPreDirFormPath(path);
+            let preDir = getPreDirFormPath(path);
             updateProjectCache((preData: any) => {
                 return {
                     ...preData,
-                    savePreDir
+                    preDir
                 }
             });
         }
@@ -82,29 +98,71 @@ export function Properties<FC>() {
     }
 
     async function handleImageSelectOk() {
+        console.log("tttt")
         if (imageList.length > 0 && config) {
-            let { top, right, bottom, left, radius } = config;
-            let list = await clipImageTasks(imageList, top, right, bottom, left, radius);
-            let sha256 = forge.md.sha256.create();
-            let result = list.map(img => {
-                return {
-                    url: img,
-                    key: sha256.update(img).digest().toHex()
-                }
-            })
-            if (config.part === Part.HAIR) {
-                updateHairImages([...hairImages, ...result]);
-                updateHairWidth(right - left);
-                updateHairHeight(bottom - top);
+            if (config.id === -1 || config.id === -2) {
+                console.log(config);
+                await handleNoClipImage(config.id);
             } else {
-                updateClothesImages([...clothesImages, ...result]);
-                updateClothesWidth(right - left);
-                updateClothesHeight(bottom - top);
+                let { top, right, bottom, left, radius } = config;
+                let list = await clipImageTasks(imageList, top, right, bottom, left, radius);
+                let sha256 = forge.md.sha256.create();
+                let result = list.map(img => {
+                    return {
+                        url: img,
+                        key: sha256.update(img).digest().toHex()
+                    }
+                })
+                if (config.part === Part.HAIR) {
+                    updateHairImages([...hairImages, ...result]);
+                    updateHairWidth(right - left);
+                    updateHairHeight(bottom - top);
+                } else {
+                    updateClothesImages([...clothesImages, ...result]);
+                    updateClothesWidth(right - left);
+                    updateClothesHeight(bottom - top);
+                }
             }
-
         }
         updateImageList([]);
         updateSelectImageVisible(false);
+    }
+
+    async function handleNoClipImage(type: number) {
+        let width = 0;
+        let height = 0;
+        let result: { url: string; key: string; }[] = [];
+        let sha256 = forge.md.sha256.create();
+        while (imageList.length > 0) {
+            let source = imageList.pop();
+            const image = await readBinaryFile(source as string);
+            const imageBlob = new Blob([image]);
+            const url = window.URL.createObjectURL(imageBlob);
+            result.push({
+                url,
+                key: sha256.update(url).digest().toHex()
+            });
+        }
+        // 获取图片宽高
+        await new Promise((resolve) => {
+            let img = new Image();
+            img.onload = () => {
+                width = img.naturalWidth;
+                height = img.naturalHeight;
+                resolve(true);
+            };
+            img.src = result[0].url;
+        });
+        if (type === -1) {
+            updateHairImages([...hairImages, ...result]);
+            updateHairWidth(width);
+            updateHairHeight(height);
+        } else if (type === -2) {
+            updateClothesImages([...clothesImages, ...result]);
+            updateClothesWidth(width);
+            updateClothesHeight(height);
+
+        }
     }
 
     function handleImportClick() {
@@ -130,6 +188,8 @@ export function Properties<FC>() {
         <HairPOroperties />
         <DividerH />
         <ClothesPOroperties />
+        <DividerH/>
+        <CommonProperties/>
         <div className="flex-1"></div>
         <DividerH />
         <div className="px-2 py-1 text-right">
@@ -143,6 +203,8 @@ export function Properties<FC>() {
             <div className="w-96">
                 <FormItem label="配置">
                     <select className="w-full" onChange={handleConfigChange} placeholder="请选择">
+                        <option value={-1} selected={config && (config.id === -1)}>头发无裁剪</option>
+                        <option value={-2} selected={config && (config.id === -2)}>衣服无裁剪</option>
                         {
                             configList.map(item => <option key={item.id} value={item.id} selected={config && (config.id === item.id)}>{item.name}</option>)
                         }

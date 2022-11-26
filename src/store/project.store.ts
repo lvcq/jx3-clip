@@ -1,6 +1,6 @@
 import { ClipConfig } from "@backend/apis/clip_config";
 import { Part } from "@data/part";
-import { atom } from "jotai";
+import { atom, useAtom } from "jotai";
 
 interface ImageItem {
     url: string;
@@ -13,7 +13,7 @@ interface WorktopGridConfig {
     colgap: number;
     cols: number;
     width: number;
-    height:number;
+    height: number;
 }
 
 export const selectedClipConfigAtom = atom<ClipConfig | undefined>(undefined);
@@ -97,25 +97,27 @@ export const panelWidthAtom = atom<number>((get) => {
 
 
 
-const atomWithLocalStorage = (key:string, initialValue:Object) => {
+const atomWithLocalStorage = (key: string, initialValue: Object) => {
     const getInitialValue = () => {
-      const item = localStorage.getItem(key)
-      if (item !== null) {
-        return JSON.parse(item)
-      }
-      return initialValue
+        const item = localStorage.getItem(key)
+        if (item !== null) {
+            return JSON.parse(item)
+        }
+        return initialValue
     }
     const baseAtom = atom(getInitialValue())
     const derivedAtom = atom(
-      (get) => get(baseAtom),
-      (get, set, update) => {
-        const nextValue =
-          typeof update === 'function' ? update(get(baseAtom)) : update
-        set(baseAtom, nextValue)
-        localStorage.setItem(key, JSON.stringify(nextValue))
-      }
+        (get) => get(baseAtom),
+        (get, set, update) => {
+            const nextValue =
+                typeof update === 'function' ? update(get(baseAtom)) : update
+            set(baseAtom, nextValue)
+            localStorage.setItem(key, JSON.stringify(nextValue))
+        }
     )
     return derivedAtom
-  }
+}
 
-  export const projectCacheAtom = atomWithLocalStorage("projectCacheInfo","");
+export const projectCacheAtom = atomWithLocalStorage("projectCacheInfo", "");
+
+export const scaleFactorAtom = atom(100);

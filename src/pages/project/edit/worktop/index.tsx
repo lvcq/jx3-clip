@@ -1,15 +1,22 @@
 import { Part } from "@data/part";
-import { hairImagesAtom, panelWidthAtom } from "@store/project.store"
+import { panelWidthAtom, scaleFactorAtom } from "@store/project.store"
 import { useAtom } from "jotai"
-import { ImageWrapper } from "./image-wrapper";
+import { useEffect, useState } from "preact/hooks";
 import { WorktopGrid } from "./worktop-grid";
 import { WorktopGridClothes } from "./worktop-grid-clothes";
 
 
 export function Worktop<FC>() {
     const [panelWidth] = useAtom(panelWidthAtom);
+    const [scale] = useAtom(scaleFactorAtom);
+    const [renderWith, updateRenderWidth] = useState(() => Math.floor(panelWidth * scale / 100));
+
+    useEffect(() => {
+        updateRenderWidth(Math.floor(panelWidth * scale / 100));
+    }, [panelWidth, scale]);
+
     return <div className="h-full p-4 overflow-auto">
-        <div style={{ width: `${panelWidth}px` }}>
+        <div className="mx-auto" style={{ width: `${renderWith}px` }}>
             <WorktopGrid type={Part.HAIR} />
             <WorktopGridClothes type={Part.CLOTHES} />
         </div>
