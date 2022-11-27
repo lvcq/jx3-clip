@@ -1,4 +1,5 @@
 import { dragElementKeyAtom, dragOverElementKeyAtom } from "@store/drag.store";
+import { selectionAtom, selectionManagerAtom } from "@store/project.store";
 import { useAtom } from "jotai";
 import { TargetedEvent, useState } from "preact/compat";
 import "./style.css";
@@ -14,6 +15,8 @@ export function ImageWrapper<FC>({ url, type, id, onMove }: ImageWrapperProps) {
 
     const [dragged, updateDragged] = useAtom(dragElementKeyAtom);
     const [overEle, updateOverEle] = useAtom(dragOverElementKeyAtom);
+    const [, updateSelection] = useAtom(selectionManagerAtom);
+    const [selection] = useAtom(selectionAtom);
 
     function handleDragStart(evt: TargetedEvent<HTMLDivElement, DragEvent>) {
         if (evt.dataTransfer) {
@@ -65,8 +68,17 @@ export function ImageWrapper<FC>({ url, type, id, onMove }: ImageWrapperProps) {
         }
     }
 
+    function handleItemClick(event: TargetedEvent<HTMLDivElement, MouseEvent>) {
+        updateSelection({
+            part: type!,
+            key: id!,
+            ctrlKey: event.ctrlKey,
+            shiftKey: event.shiftKey
+        });
+    }
+
     return <div
-        className={"w-full h-full relative" + (dragged === id ? " draged-elm" : "") + (overEle === id ? " drag-over" : "")}
+        className={"w-full h-full relative" + (dragged === id ? " draged-elm" : "") + (overEle === id ? " drag-over" : "")+ (selection.list.includes(id!)?" selected-ele":"")}
         draggable
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -78,6 +90,6 @@ export function ImageWrapper<FC>({ url, type, id, onMove }: ImageWrapperProps) {
             <source srcset={url}></source>
             <img className="w-full" src={url} alt="" />
         </picture>
-        <div className="absolute top-0 right-0 bottom-0 left-0 z-10" onDrop={handleDrop} onDragOver={handleDragOver}></div>
+        <div className="absolute top-0 right-0 bottom-0 left-0 z-10 marker" onDrop={handleDrop} onDragOver={handleDragOver} onClick={handleItemClick}></div>
     </div>
 }

@@ -1,8 +1,8 @@
 import { ClipConfig } from "@backend/apis/clip_config";
 import { Part } from "@data/part";
-import { atom, useAtom } from "jotai";
+import { atom } from "jotai";
 
-interface ImageItem {
+export interface ImageItem {
     url: string;
     key: string;
 }
@@ -121,3 +121,93 @@ const atomWithLocalStorage = (key: string, initialValue: Object) => {
 export const projectCacheAtom = atomWithLocalStorage("projectCacheInfo", "");
 
 export const scaleFactorAtom = atom(100);
+
+interface ImageSelection {
+    part: Part;
+    list: string[];
+}
+interface ImageSelectionPayload {
+    part: Part;
+    ctrlKey?: boolean;
+    shiftKey?: boolean;
+    key: string;
+}
+
+export const selectionAtom = atom<ImageSelection>({
+    part: Part.HAIR,
+    list: []
+});
+
+export const selectionManagerAtom = atom<null, ImageSelectionPayload>(
+    null,
+    (get, set, update) => {
+        let pre = get(selectionAtom);
+        let hairImages = get(hairConfigAtom).images;
+        let clothesImages = get(clothesConfigAtom).images;
+        let imageList = update.part === Part.HAIR ? hairImages : clothesImages;
+        if (update.shiftKey || update.ctrlKey) {
+            if (pre.part !== update.part && pre.list.length > 0) {
+                return;
+            }
+            if (pre.list.length === 0) {
+                set(selectionAtom, {
+                    part: update.part,
+                    list: [update.key]
+                })
+            } else {
+                let nList: string[] = [];
+                let last = pre.list[pre.list.length - 1];
+                if (update.shiftKey) {
+                    if (last === update.key) {
+                        nList = pre.list;
+                    } else {
+                        let preIndex = imageList.findIndex(item => item.key === last);
+                        let nextIndex = imageList.findIndex(item => item.key === update.key);
+                        let start = Math.min(preIndex, nextIndex);
+                        let end = Math.max(preIndex, nextIndex);
+                        nList = imageList.slice(start, end + 1).map(item => item.key);
+                    }
+                } else if (update.ctrlKey) {
+                    if (pre.list.includes(update.key)) {
+                        nList = pre.list.filter(item => item !== update.key);
+                    } else {
+                        nList = [...pre.list, update.key];
+                    }
+                }
+                set(selectionAtom, {
+                    part: update.part,
+                    list: nList
+                })
+            }
+
+        } else {
+            set(selectionAtom, {
+                part: update.part,
+                list: [update.key]
+            })
+        }
+    });
+
+export const clearProjectAtom = atom(null, (get, set) => {
+    set(hairConfigAtom, {
+        images: [],
+        rowgap: 0,
+        colgap: 0,
+        cols: 5,
+        width: 0,
+        height: 0
+    });
+    set(clothesConfigAtom, {
+        images: [],
+        rowgap: 0,
+        colgap: 0,
+        cols: 5,
+        width: 0,
+        height: 0
+    });
+    set(scaleFactorAtom, 100);
+    set(selectionAtom, {
+        part: Part.HAIR,
+        list: []
+    })
+});

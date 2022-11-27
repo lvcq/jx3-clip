@@ -15,7 +15,8 @@ export function Worktop<FC>() {
         updateRenderWidth(Math.floor(panelWidth * scale / 100));
     }, [panelWidth, scale]);
 
-    return <div className="h-full p-4 overflow-auto">
+
+    return <div className="h-full p-4 overflow-auto" >
         <div className="mx-auto" style={{ width: `${renderWith}px` }}>
             <WorktopGrid type={Part.HAIR} />
             <WorktopGridClothes type={Part.CLOTHES} />

@@ -10,7 +10,8 @@ import {
     hairImagesAtom,
     hairWithAtom,
     selectedClipConfigAtom,
-    projectCacheAtom
+    projectCacheAtom,
+    clearProjectAtom
 } from "@store/project.store";
 import { open } from "@tauri-apps/api/dialog";
 import { clipImageTasks } from "@utils/clip";
@@ -41,6 +42,7 @@ export function Properties<FC>() {
     const [selectImageVisible, updateSelectImageVisible] = useState<boolean>(false);
     const [showPreview, updateShowPreview] = useState(false);
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
+    const [,clearProject] = useAtom(clearProjectAtom)
 
 
     function handleConfigChange(evt: JSX.TargetedEvent<HTMLSelectElement>) {
@@ -176,6 +178,10 @@ export function Properties<FC>() {
         updateShowPreview(true);
     }
 
+    function handleClearProject(){
+        clearProject()
+    }
+
     return <div className="h-full overflow-y-auto flex flex-col">
         <button
             className="text-lg block w-4/5 h-9 leading-9 rounded m-auto mb-4 text-white bg-primary disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -186,12 +192,13 @@ export function Properties<FC>() {
         <HairPOroperties />
         <DividerH />
         <ClothesPOroperties />
-        <DividerH/>
-        <CommonProperties/>
+        <DividerH />
+        <CommonProperties />
         <div className="flex-1"></div>
         <DividerH />
         <div className="px-2 py-1 text-right">
-            <button className="py-px px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={handlePreview}>预览</button>
+            <button className="py-1 px-2 rounded border border-solid border-gray-500 hover:ring-2 ring-gray-300" onClick={handleClearProject}>清空</button>
+            <button className="ml-2 py-1 px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={handlePreview}>预览</button>
         </div>
         <Modal
             visible={selectImageVisible}

@@ -1,4 +1,5 @@
-import { clothesConfigAtom, clothesImagesAtom } from "@store/project.store"
+import { Part } from "@data/part";
+import { clothesConfigAtom, clothesImagesAtom, ImageItem, selectionAtom } from "@store/project.store"
 import { useAtom } from "jotai"
 import { useEffect, useState } from "preact/hooks";
 import { ImageWrapper } from "./image-wrapper";
@@ -10,6 +11,7 @@ interface WorktopGridProps {
 export function WorktopGridClothes<FC>({ type }: WorktopGridProps) {
     const [config] = useAtom(clothesConfigAtom);
     const [, updateImages] = useAtom(clothesImagesAtom);
+    const [selection] = useAtom(selectionAtom);
     const [gridStyle, updateGridStyle] = useState<{ [key: string]: string; }>({});
     useEffect(() => {
         updateGridStyle({
@@ -20,12 +22,30 @@ export function WorktopGridClothes<FC>({ type }: WorktopGridProps) {
     }, [config.rowgap, config.colgap, config.cols]);
 
     function handleImageMove(source: string, target: string) {
-        let sourceIndex = config.images.findIndex(item => item.key === source);
+        let sources = [source];
+        if (selection.part === Part.CLOTHES) {
+            if (selection.list.includes(source)) {
+                sources = selection.list;
+            } else {
+                sources.push(...selection.list);
+            }
+        }
+        const before: ImageItem[] = [];
+        const after: ImageItem[] = [];
+        const selected: ImageItem[] = [];
+        const len = config.images.length;
         let targetIndex = config.images.findIndex(item => item.key === target);
-        let newList = [...config.images];
-        let souceItem = newList.find(item => item.key === source)!;
-        newList.splice(sourceIndex, 1);
-        newList.splice(targetIndex, 0, souceItem);
+        for (let i = 0; i < len; i++) {
+            let item = config.images[i]
+            if (sources.includes(item.key)) {
+                selected.push(item);
+            } else if (i < targetIndex) {
+                before.push(item);
+            } else {
+                after.push(item);
+            }
+        }
+        let newList =[...before,...selected,...after];
         updateImages(newList);
     }
 

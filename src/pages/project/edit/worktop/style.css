@@ -4,3 +4,12 @@
 .drag-over{
     @apply border border-dashed border-red-500;
 }
+
+.selected-ele{
+    @apply border border-solid border-primary;
+
+}
+
+.selected-ele .marker{
+    @apply bg-primary bg-opacity-30;
+}
