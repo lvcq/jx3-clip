@@ -1,6 +1,7 @@
 import { Part } from "@data/part";
-import { hairConfigAtom, hairImagesAtom, ImageItem, selectionAtom } from "@store/project.store"
+import { clearSelectionAtom, hairConfigAtom, hairImagesAtom, ImageItem, selectionAtom } from "@store/project.store"
 import { useAtom } from "jotai"
+import { TargetedEvent } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 import { ImageWrapper } from "./image-wrapper";
 
@@ -13,6 +14,8 @@ export function WorktopGrid<FC>({ type }: WorktopGridProps) {
     const [, updateImages] = useAtom(hairImagesAtom);
     const [gridStyle, updateGridStyle] = useState<{ [key: string]: string; }>({});
     const [selection] = useAtom(selectionAtom);
+    const [, clearSelection] = useAtom(clearSelectionAtom);
+
     useEffect(() => {
         updateGridStyle({
             "grid-template-columns": `repeat(${config.cols},1fr)`,
@@ -49,10 +52,31 @@ export function WorktopGrid<FC>({ type }: WorktopGridProps) {
         updateImages(newList);
     }
 
-    return <div className="grid" style={gridStyle}>
+    function handleEmptyClick(event: TargetedEvent<HTMLDivElement, MouseEvent>) {
+        event.stopPropagation();
+        clearSelection();
+    }
+
+    function handleDeleteItem(key: string) {
+        let deleteKeys = [key];
+        if (selection.part === Part.HAIR) {
+            deleteKeys.push(...selection.list);
+        }
+        let remainItems = config.images.filter(item => !deleteKeys.includes(item.key));
+        updateImages(remainItems);
+        clearSelection();
+    }
+
+    return <div className="grid" style={gridStyle} onClick={handleEmptyClick}>
         {
             config.images.map(item => {
-                return <ImageWrapper url={item.url} key={item.key} id={item.key} type={type} onMove={handleImageMove} />
+                return <ImageWrapper
+                    url={item.url}
+                    key={item.key}
+                    id={item.key}
+                    type={type}
+                    onMove={handleImageMove}
+                    onDelete={handleDeleteItem} />
             })
         }
     </div>

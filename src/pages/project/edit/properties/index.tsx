@@ -27,6 +27,7 @@ import { homeDir } from '@tauri-apps/api/path';
 import { getPreDirFormPath } from "@utils/fileopt";
 import { readBinaryFile } from "@tauri-apps/api/fs";
 import { CommonProperties } from "./common-properties";
+import { CenterRegionProperties } from "./central-region-properties";
 
 
 export function Properties<FC>() {
@@ -42,7 +43,7 @@ export function Properties<FC>() {
     const [selectImageVisible, updateSelectImageVisible] = useState<boolean>(false);
     const [showPreview, updateShowPreview] = useState(false);
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
-    const [,clearProject] = useAtom(clearProjectAtom)
+    const [, clearProject] = useAtom(clearProjectAtom)
 
 
     function handleConfigChange(evt: JSX.TargetedEvent<HTMLSelectElement>) {
@@ -178,7 +179,7 @@ export function Properties<FC>() {
         updateShowPreview(true);
     }
 
-    function handleClearProject(){
+    function handleClearProject() {
         clearProject()
     }
 
@@ -192,6 +193,8 @@ export function Properties<FC>() {
         <HairPOroperties />
         <DividerH />
         <ClothesPOroperties />
+        <DividerH />
+        <CenterRegionProperties />
         <DividerH />
         <CommonProperties />
         <div className="flex-1"></div>

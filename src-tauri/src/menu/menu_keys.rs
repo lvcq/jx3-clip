@@ -34,5 +34,4 @@ macro_rules! menu_keys {
     }
 }
 
-menu_keys!(ClipConfig, CreateNewProject);
-
+menu_keys!(ClipConfig, FrameConfig, CreateNewProject);

@@ -1,6 +1,5 @@
 use crate::database::clip_config::ClipConfig;
 
-// remember to call `.manage(MyState::default())`
 #[tauri::command]
 pub async fn create_clip_config(
     name: String,
@@ -21,18 +20,18 @@ pub async fn create_clip_config(
 }
 
 #[tauri::command]
-pub async fn get_all_clip_config() -> Result<Vec<ClipConfig>, String> {
+pub fn get_all_clip_config() -> Result<Vec<ClipConfig>, String> {
     let configs = ClipConfig::get_all()?;
     Ok(configs)
 }
 
 #[tauri::command]
-pub async fn get_clip_config_detail(id: i64) -> Result<ClipConfig, String> {
+pub fn get_clip_config_detail(id: i64) -> Result<ClipConfig, String> {
     ClipConfig::get_detail(id)
 }
 
 #[tauri::command]
-pub async fn update_clip_config(
+pub fn update_clip_config(
     id: i64,
     name: &str,
     body_type: i8,
@@ -50,6 +49,6 @@ pub async fn update_clip_config(
 }
 
 #[tauri::command]
-pub async fn delete_clip_config(id: i64) -> Result<(), String> {
+pub fn delete_clip_config(id: i64) -> Result<(), String> {
     ClipConfig::delete(id)
 }

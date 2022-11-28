@@ -120,7 +120,20 @@ const atomWithLocalStorage = (key: string, initialValue: Object) => {
 
 export const projectCacheAtom = atomWithLocalStorage("projectCacheInfo", "");
 
-export const scaleFactorAtom = atom(100);
+
+const scaleValueAtom = atom(100);
+
+export const scaleFactorAtom = atom<number, number>((get) => get(scaleValueAtom), (get, set, delta) => {
+    let preNum = get(scaleValueAtom);
+    let next = preNum + delta;
+    if (next > 100) {
+        next = 100;
+    }
+    if (next < 0) {
+        next = 0;
+    }
+    set(scaleValueAtom, next);
+});
 
 interface ImageSelection {
     part: Part;
@@ -180,13 +193,46 @@ export const selectionManagerAtom = atom<null, ImageSelectionPayload>(
                 })
             }
 
+        } else if (pre.part === update.part && pre.list.length === 1 && pre.list[0] === update.key) {
+            set(selectionAtom, {
+                part: update.part,
+                list: []
+            })
         } else {
             set(selectionAtom, {
                 part: update.part,
                 list: [update.key]
             })
         }
+    }
+);
+
+export const clearSelectionAtom = atom(null, (get, set) => {
+    set(selectionAtom, {
+        part: Part.HAIR,
+        list: []
     });
+})
+
+
+interface CentralRegion {
+    vPadding: number;//上下垂直间距
+}
+
+export const centralRegionAtom = atom<CentralRegion>({
+    vPadding: 0,
+})
+
+
+export const centralVPaddingAtom = atom<number, number>(
+    (get) => get(centralRegionAtom).vPadding,
+    (get, set, vp) => {
+        set(centralRegionAtom, {
+            ...get(centralRegionAtom),
+            vPadding: vp
+        });
+    });
+
 
 export const clearProjectAtom = atom(null, (get, set) => {
     set(hairConfigAtom, {
@@ -209,5 +255,8 @@ export const clearProjectAtom = atom(null, (get, set) => {
     set(selectionAtom, {
         part: Part.HAIR,
         list: []
+    });
+    set(centralRegionAtom, {
+        vPadding: 0
     })
 });

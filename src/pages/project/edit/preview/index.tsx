@@ -1,4 +1,4 @@
-import { clothesConfigAtom, hairConfigAtom, projectCacheAtom } from "@store/project.store";
+import { centralRegionAtom, clothesConfigAtom, hairConfigAtom, projectCacheAtom } from "@store/project.store";
 import { useAtom } from "jotai";
 import { createPortal } from "preact/compat";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -38,6 +38,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     const [isSaving, updateIsSaving] = useState(false);
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
     const [, updateGlobalMessage] = useAtom(globalMessageAtom);
+    const [centralConfig]=useAtom(centralRegionAtom);
 
     useEffect(() => {
         return () => {
@@ -49,8 +50,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
 
     useEffect(() => {
 
-        function drawImages(options: DrawOptions
-        ) {
+        function drawImages(options: DrawOptions) {
             let { originX, originY, images, width, height, cols, rowcap, colgap, context, remain } = options;
             let rows = Math.ceil(images.length / cols);
             for (let i = 0; i < rows; i++) {
@@ -81,6 +81,10 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     waitToDraw(width, drawFun);
                 })
             }
+        }
+
+        function getCentralHeight(){
+            return centralConfig.vPadding*2;
         }
 
         if (open && canvasRef.current) {
@@ -155,7 +159,8 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                 let hairAreaHeight = hairRows * hairImageHeight + (hairRows - 1) * hairConfig.rowgap;
                 let clothesRows = Math.ceil(clothesConfig.images.length / clothesConfig.cols);
                 let clothesAreaHeight = clothesRows * clothesImageHeight + (clothesRows - 1) * clothesConfig.rowgap;
-                let renderHeight = hairAreaHeight + clothesAreaHeight;
+                let centralHeight = getCentralHeight();
+                let renderHeight = hairAreaHeight + clothesAreaHeight+centralHeight;
                 updateCanvasHeight(renderHeight);
                 updateCanvasWidth(renderWith);
                 waitToDraw(renderWith, () => {
@@ -173,7 +178,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     });
                     drawImages({
                         originX: 0,
-                        originY: hairAreaHeight,
+                        originY: hairAreaHeight+centralHeight,
                         images: clothesConfig.images.map(item => item.url),
                         width: clothesImageWidth,
                         height: clothesImageHeight,
