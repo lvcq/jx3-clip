@@ -123,9 +123,20 @@ export const projectCacheAtom = atomWithLocalStorage("projectCacheInfo", "");
 
 const scaleValueAtom = atom(100);
 
-export const scaleFactorAtom = atom<number, number>((get) => get(scaleValueAtom), (get, set, delta) => {
+export const scaleFactorDeltaAtom = atom<number, number>((get) => get(scaleValueAtom), (get, set, delta) => {
     let preNum = get(scaleValueAtom);
     let next = preNum + delta;
+    if (next > 100) {
+        next = 100;
+    }
+    if (next < 0) {
+        next = 0;
+    }
+    set(scaleValueAtom, next);
+});
+
+export const scaleFactorAtom = atom<number, number>((get) => get(scaleValueAtom), (get, set, scale) => {
+    let next = scale;
     if (next > 100) {
         next = 100;
     }
@@ -251,7 +262,7 @@ export const clearProjectAtom = atom(null, (get, set) => {
         width: 0,
         height: 0
     });
-    set(scaleFactorAtom, 100);
+    set(scaleFactorDeltaAtom, 100);
     set(selectionAtom, {
         part: Part.HAIR,
         list: []

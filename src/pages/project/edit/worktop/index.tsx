@@ -1,5 +1,5 @@
 import { Part } from "@data/part";
-import { clearSelectionAtom, panelWidthAtom, scaleFactorAtom } from "@store/project.store"
+import { clearSelectionAtom, panelWidthAtom, scaleFactorDeltaAtom } from "@store/project.store"
 import { useAtom } from "jotai"
 import { TargetedEvent } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
@@ -10,7 +10,7 @@ import { WorktopGridClothes } from "./worktop-grid-clothes";
 
 export function Worktop<FC>() {
     const [panelWidth] = useAtom(panelWidthAtom);
-    const [scale, updateScale] = useAtom(scaleFactorAtom);
+    const [scale, updateScale] = useAtom(scaleFactorDeltaAtom);
     const [renderWith, updateRenderWidth] = useState(() => Math.floor(panelWidth * scale / 100));
     const [, clearSelection] = useAtom(clearSelectionAtom);
 
