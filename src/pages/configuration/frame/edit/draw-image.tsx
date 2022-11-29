@@ -131,8 +131,6 @@ export function DrawImage<FC>({ }: DrawImageProps) {
                 // draw frame
                 const imageLeft = demoImageLeft-offsetLeft;
                 const imageTop = demoImageTop-offsetTop;
-
-                console.log(frameRenderHeight, frameRenderWidth);
                 context.drawImage(frameImage, imageLeft, imageTop, frameRenderWidth, frameRenderHeight);
 
             } else {

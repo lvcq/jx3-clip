@@ -1,4 +1,5 @@
 import { ClipConfig } from "@backend/apis/clip_config";
+import { FrameConfig } from "@backend/apis/frame_config";
 import { Part } from "@data/part";
 import { atom } from "jotai";
 
@@ -14,6 +15,7 @@ interface WorktopGridConfig {
     cols: number;
     width: number;
     height: number;
+    frame?: FrameConfig
 }
 
 export const selectedClipConfigAtom = atom<ClipConfig | undefined>(undefined);
@@ -42,6 +44,15 @@ export const hairColgapAtom = atom<number, number>((get) => get(hairConfigAtom).
 export const hairColsAtom = atom<number, number>((get) => get(hairConfigAtom).cols, (get, set, cols) => set(hairConfigAtom, { ...get(hairConfigAtom), cols }));
 export const hairWithAtom = atom<number, number>((get) => get(hairConfigAtom).width, (get, set, width) => set(hairConfigAtom, { ...get(hairConfigAtom), width }));
 export const hairHeightAtom = atom<number, number>((get) => get(hairConfigAtom).height, (get, set, height) => set(hairConfigAtom, { ...get(hairConfigAtom), height }));
+export const hairFrameConfigAtom = atom<FrameConfig | undefined, FrameConfig | undefined>(
+    get => get(hairConfigAtom).frame,
+    (get, set, frame) => {
+        set(hairConfigAtom, {
+            ...get(hairConfigAtom),
+            frame
+        })
+    }
+);
 
 export const clothesConfigAtom = atom<WorktopGridConfig>({
     images: [],
@@ -80,6 +91,16 @@ export const clothesWidthAtom = atom<number, number>(
 export const clothesHeightAtom = atom<number, number>(
     (get) => get(clothesConfigAtom).height,
     (get, set, height) => set(clothesConfigAtom, { ...get(clothesConfigAtom), height })
+);
+
+export const clothesFrameConfigAtom = atom<FrameConfig | undefined, FrameConfig | undefined>(
+    get => get(clothesConfigAtom).frame,
+    (get, set, frame) => {
+        set(clothesConfigAtom, {
+            ...get(clothesConfigAtom),
+            frame
+        })
+    }
 );
 
 
@@ -135,16 +156,19 @@ export const scaleFactorDeltaAtom = atom<number, number>((get) => get(scaleValue
     set(scaleValueAtom, next);
 });
 
-export const scaleFactorAtom = atom<number, number>((get) => get(scaleValueAtom), (get, set, scale) => {
-    let next = scale;
-    if (next > 100) {
-        next = 100;
+export const scaleFactorAtom = atom<number, number>(
+    (get) => get(scaleValueAtom),
+    (get, set, scale) => {
+        let next = scale;
+        if (next > 100) {
+            next = 100;
+        }
+        if (next < 0) {
+            next = 0;
+        }
+        set(scaleValueAtom, next);
     }
-    if (next < 0) {
-        next = 0;
-    }
-    set(scaleValueAtom, next);
-});
+);
 
 interface ImageSelection {
     part: Part;

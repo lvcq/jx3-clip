@@ -1,7 +1,9 @@
 import { FormItem } from "@components/form-item";
 import { SubTitle } from "@components/sub-title";
-import { hairColgapAtom, hairColsAtom, hairImagesAtom, hairRowgapAtom } from "@store/project.store";
+import { frameConfigListAtom } from "@store/frame-config.store";
+import { hairColgapAtom, hairColsAtom, hairFrameConfigAtom, hairImagesAtom, hairRowgapAtom } from "@store/project.store";
 import { useAtom } from "jotai";
+import { TargetedEvent } from "preact/compat";
 
 
 export function HairPOroperties<FC>() {
@@ -9,17 +11,37 @@ export function HairPOroperties<FC>() {
     const [colgap, updateColgap] = useAtom(hairColgapAtom);
     const [cols, updateCols] = useAtom(hairColsAtom);
     const [images] = useAtom(hairImagesAtom);
+    const [frame, updateFrame] = useAtom(hairFrameConfigAtom);
+    const [frameList] = useAtom(frameConfigListAtom);
 
     function parseStringToNumber(source: string): number {
         let num = parseInt(source, 10) || 0
         return num >= 0 ? num : 0;
     }
+
     function handleNumberChange(evt: JSX.TargetedEvent<HTMLInputElement, Event>, updater: (update: number) => void) {
         let num = parseStringToNumber(evt.currentTarget.value);
         updater(num);
     }
+
+    function handleFramgeChange(event: TargetedEvent<HTMLSelectElement>) {
+        const value = event.currentTarget.value;
+        let item = frameList.find(item => String(item.id) === value);
+        if (item) {
+            updateFrame(item);
+        } else {
+            updateFrame(undefined);
+        }
+    }
+
     return <>
         <SubTitle>头发设置</SubTitle>
+        <FormItem label="边框">
+            <select className="w-full" onChange={handleFramgeChange}>
+                <option value={undefined} checked={frame === undefined}>无边框</option>
+                {frameList.map(item => (<option key={item?.id} value={item?.id} checked={frame && (frame.id === item.id)}>{item.name}</option>))}
+            </select>
+        </FormItem>
         <FormItem label="行间距">
             <input className="w-full" type="number" value={rowgap} onChange={(evt) => handleNumberChange(evt, updateRowgap)}></input>
         </FormItem>

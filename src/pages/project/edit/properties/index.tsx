@@ -183,7 +183,7 @@ export function Properties<FC>() {
         clearProject()
     }
 
-    return <div className="h-full overflow-y-auto flex flex-col">
+    return <div className="h-full overflow-y-auto flex flex-col pr-4">
         <button
             className="text-lg block w-4/5 h-9 leading-9 rounded m-auto mb-4 text-white bg-primary disabled:bg-gray-400 disabled:cursor-not-allowed"
             onClick={handleImportClick}

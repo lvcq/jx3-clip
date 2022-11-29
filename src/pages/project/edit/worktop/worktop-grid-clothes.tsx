@@ -1,5 +1,6 @@
 import { Part } from "@data/part";
-import { clearSelectionAtom, clothesConfigAtom, clothesImagesAtom, ImageItem, selectionAtom } from "@store/project.store"
+import { clearSelectionAtom, clothesConfigAtom, clothesFrameConfigAtom, clothesImagesAtom, ImageItem, scaleFactorAtom, selectionAtom } from "@store/project.store"
+import { loadLocalImage } from "@utils/fileopt";
 import { useAtom } from "jotai"
 import { TargetedEvent } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
@@ -15,14 +16,54 @@ export function WorktopGridClothes<FC>({ type }: WorktopGridProps) {
     const [selection] = useAtom(selectionAtom);
     const [gridStyle, updateGridStyle] = useState<{ [key: string]: string; }>({});
     const [, clearSelection] = useAtom(clearSelectionAtom);
+    const [scale] = useAtom(scaleFactorAtom);
+    const [frameConfig] = useAtom(clothesFrameConfigAtom);
+    const [frameUrl, updateFrameUrl] = useState<string | null>(null);
+    const [imagePStyle, updateImagePStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
+
+    useEffect(() => {
+        async function loadFrameImage() {
+            try {
+                if (frameConfig) {
+                    const url = await loadLocalImage(frameConfig.source);
+                    const { width, height, top, right, bottom, left } = frameConfig;
+                    let innerWidth = right - left;
+                    let innerHeight = bottom - top;
+                    let hFactor = config.width / innerWidth;
+                    let vFactor = config.height / innerHeight;
+                    let pt = Math.floor(top * vFactor);
+                    let pr = Math.floor((width! - right) * hFactor);
+                    let pb = Math.floor((height! - bottom) * vFactor);
+                    let pl = Math.floor(left * hFactor);
+                    updateFrameUrl(url);
+                    updateImagePStyle({
+                        paddingTop: `${pt}px`,
+                        paddingRight: `${pr}px`,
+                        paddingBottom: `${pb}px`,
+                        paddingLeft: `${pl}px`,
+                    })
+                } else {
+                    updateFrameUrl(null);
+                    updateImagePStyle({});
+                }
+            } catch (err) {
+                console.log(err);
+                updateFrameUrl(null);
+                updateImagePStyle({});
+            }
+
+        }
+        loadFrameImage();
+    }, [frameConfig]);
+
 
     useEffect(() => {
         updateGridStyle({
             "grid-template-columns": `repeat(${config.cols},1fr)`,
-            "grid-column-gap": `${config.colgap}px`,
-            "grid-row-gap": `${config.rowgap}px`,
+            "grid-column-gap": `${Math.floor(config.colgap * scale / 100)}px`,
+            "grid-row-gap": `${Math.floor(config.rowgap * scale / 100)}px`,
         });
-    }, [config.rowgap, config.colgap, config.cols]);
+    }, [config.rowgap, config.colgap, config.cols, scale]);
 
     function handleImageMove(source: string, target: string) {
         let sources = [source];
@@ -70,7 +111,15 @@ export function WorktopGridClothes<FC>({ type }: WorktopGridProps) {
     return <div className="grid" style={gridStyle} onClick={handleEmptyClick}>
         {
             config.images.map(item => {
-                return <ImageWrapper url={item.url} key={item.key} id={item.key} type={type} onMove={handleImageMove} onDelete={handleDeleteItem}/>
+                return <ImageWrapper
+                    url={item.url}
+                    frameUrl={frameUrl}
+                    imgStyle={imagePStyle}
+                    key={item.key}
+                    id={item.key}
+                    type={type}
+                    onMove={handleImageMove}
+                    onDelete={handleDeleteItem} />
             })
         }
     </div>

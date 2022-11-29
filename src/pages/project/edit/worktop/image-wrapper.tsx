@@ -11,9 +11,18 @@ interface ImageWrapperProps {
     id?: string;
     onMove?: (source: string, target: string) => void;
     onDelete?: (key: string) => void;
+    imgStyle?: string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>;
+    frameUrl?: string | null;
 }
 
-export function ImageWrapper<FC>({ url, type, id, onMove, onDelete }: ImageWrapperProps) {
+export function ImageWrapper<FC>({
+    url,
+    type,
+    id,
+    onMove,
+    onDelete,
+    imgStyle,
+    frameUrl }: ImageWrapperProps) {
 
     const [dragged, updateDragged] = useAtom(dragElementKeyAtom);
     const [overEle, updateOverEle] = useAtom(dragOverElementKeyAtom);
@@ -28,7 +37,6 @@ export function ImageWrapper<FC>({ url, type, id, onMove, onDelete }: ImageWrapp
                 id
             }))
         }
-
         updateDragged(id as string);
     }
 
@@ -43,12 +51,10 @@ export function ImageWrapper<FC>({ url, type, id, onMove, onDelete }: ImageWrapp
     }
 
     function handleDragEnter(e: TargetedEvent<HTMLDivElement, DragEvent>) {
-        console.log("enter", id);
         updateOverEle(id as string);
     }
 
     function handleDragLeave(e: TargetedEvent<HTMLDivElement, DragEvent>) {
-        console.log("leave", id);
         if (overEle === id) {
             updateOverEle("");
         }
@@ -95,10 +101,22 @@ export function ImageWrapper<FC>({ url, type, id, onMove, onDelete }: ImageWrapp
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
     >
-        <picture className="w-full">
-            <source srcset={url}></source>
-            <img className="w-full" src={url} alt="" />
-        </picture>
+        {
+            frameUrl ? (
+                <>
+                    <div style={imgStyle}>
+                        <img className="w-full" src={url} alt="" />
+                    </div>
+                    <div className="absolute top-0 right-0 bottom-0 left-0">
+                        <img className="w-full h-full" src={frameUrl} alt="" />
+                    </div>
+
+                </>
+            ) : (
+                <img className="w-full" src={url} alt="" />
+            )
+        }
+
         <div className="absolute top-0 right-0 bottom-0 left-0 z-10 marker" onDrop={handleDrop} onDragOver={handleDragOver} onClick={handleItemClick}>
             <ContextMenu>
                 <ul className="w-20">
