@@ -37,7 +37,7 @@ export function FrameConfigPage<FC>({ id }: FrameConfigPageProps) {
             bottom: 0,
             left: 0,
             source: "",
-        })
+        });
         getDetail();
     }, [id]);
     return <PageContainer>

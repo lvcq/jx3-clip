@@ -7,6 +7,7 @@ import { useAtom } from "jotai";
 import { Worktop } from "./worktop";
 import { get_all_frame_config } from "@backend/apis/frame_config";
 import { frameConfigListAtom } from "@store/frame-config.store";
+import { clearProjectAtom } from "@store/project.store";
 
 interface ProjectEditPageProps {
     path?: string;
@@ -15,6 +16,7 @@ interface ProjectEditPageProps {
 export function ProjectEditPage<FC>({ }: ProjectEditPageProps) {
     const [, updateList] = useAtom(allClipConfigAtom);
     const [, updateFrameList] = useAtom(frameConfigListAtom);
+    const [, clearProject] = useAtom(clearProjectAtom)
     useEffect(() => {
         async function getAllClipConfig() {
             let list = await get_all_clip_config();
@@ -25,7 +27,7 @@ export function ProjectEditPage<FC>({ }: ProjectEditPageProps) {
             let list = await get_all_frame_config();
             updateFrameList(list);
         }
-
+        clearProject();
         getAllClipConfig();
         getAllFrameConfig();
     }, []);

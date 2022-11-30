@@ -1,5 +1,5 @@
 import { Part } from "@data/part";
-import { clearSelectionAtom, clothesConfigAtom, clothesFrameConfigAtom, clothesImagesAtom, ImageItem, scaleFactorAtom, selectionAtom } from "@store/project.store"
+import { clearSelectionAtom, clothesConfigAtom, clothesFrameConfigAtom, clothesImagesAtom, ImageItem, panelWidthAtom, scaleFactorAtom, selectionAtom } from "@store/project.store"
 import { loadLocalImage } from "@utils/fileopt";
 import { useAtom } from "jotai"
 import { TargetedEvent } from "preact/compat";
@@ -13,12 +13,19 @@ interface WorktopGridProps {
 export function WorktopGridClothes<FC>({ type }: WorktopGridProps) {
     const [config] = useAtom(clothesConfigAtom);
     const [, updateImages] = useAtom(clothesImagesAtom);
+    const [panelWidth] = useAtom(panelWidthAtom);
     const [selection] = useAtom(selectionAtom);
     const [gridStyle, updateGridStyle] = useState<{ [key: string]: string; }>({});
     const [, clearSelection] = useAtom(clearSelectionAtom);
     const [scale] = useAtom(scaleFactorAtom);
     const [frameConfig] = useAtom(clothesFrameConfigAtom);
     const [frameUrl, updateFrameUrl] = useState<string | null>(null);
+    const [imgPadding, updateImagePadding] = useState({
+        pt: 0,
+        pr: 0,
+        pb: 0,
+        pl: 0
+    });
     const [imagePStyle, updateImagePStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
 
     useEffect(() => {
@@ -36,11 +43,11 @@ export function WorktopGridClothes<FC>({ type }: WorktopGridProps) {
                     let pb = Math.floor((height! - bottom) * vFactor);
                     let pl = Math.floor(left * hFactor);
                     updateFrameUrl(url);
-                    updateImagePStyle({
-                        paddingTop: `${pt}px`,
-                        paddingRight: `${pr}px`,
-                        paddingBottom: `${pb}px`,
-                        paddingLeft: `${pl}px`,
+                    updateImagePadding({
+                        pt,
+                        pr,
+                        pb,
+                        pl
                     })
                 } else {
                     updateFrameUrl(null);
@@ -56,6 +63,16 @@ export function WorktopGridClothes<FC>({ type }: WorktopGridProps) {
         loadFrameImage();
     }, [frameConfig]);
 
+    useEffect(() => {
+        const { pt, pr, pb, pl } = imgPadding;
+        const factor = panelWidth.clothesFactor;
+        updateImagePStyle({
+            paddingTop: `${Math.floor(pt * scale * factor / 100)}px`,
+            paddingRight: `${Math.floor(pr * scale * factor / 100)}px`,
+            paddingBottom: `${Math.floor(pb * scale * factor / 100)}px`,
+            paddingLeft: `${Math.floor(pl * scale * factor / 100)}px`,
+        })
+    }, [imgPadding, scale, panelWidth.clothesFactor]);
 
     useEffect(() => {
         updateGridStyle({

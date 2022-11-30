@@ -43,7 +43,7 @@ export function Properties<FC>() {
     const [selectImageVisible, updateSelectImageVisible] = useState<boolean>(false);
     const [showPreview, updateShowPreview] = useState(false);
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
-    const [, clearProject] = useAtom(clearProjectAtom)
+    const [, clearProject] = useAtom(clearProjectAtom);
 
 
     function handleConfigChange(evt: JSX.TargetedEvent<HTMLSelectElement>) {

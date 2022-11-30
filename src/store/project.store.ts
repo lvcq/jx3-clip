@@ -104,15 +104,41 @@ export const clothesFrameConfigAtom = atom<FrameConfig | undefined, FrameConfig 
 );
 
 
-export const panelWidthAtom = atom<number>((get) => {
+interface PanelWidthInfo {
+    with: number;
+    hairFactor: number;
+    clothesFactor: number;
+}
+
+export const panelWidthAtom = atom<PanelWidthInfo>((get) => {
     let hair = get(hairConfigAtom);
-    let hariPanelWidth = hair.cols > 0 ? (hair.width * hair.cols + hair.colgap * (hair.cols - 1)) : 0;
+    let hairItemWidth = hair.width;
+    if (hair.frame) {
+        let { width, left, right } = hair.frame;
+        hairItemWidth = Math.floor(width! * hairItemWidth / (right - left))
+    }
+    let hariPanelWidth = hair.cols > 0 ? (hairItemWidth * hair.cols + hair.colgap * (hair.cols - 1)) : 0;
     let clothes = get(clothesConfigAtom);
-    let clothesPanelWidth = clothes.cols > 0 ? (clothes.width * clothes.cols + clothes.colgap * (clothes.cols - 1)) : 0;
+    let clothesItemWidth = clothes.width;
+    if (clothes.frame) {
+        let { width, left, right } = clothes.frame;
+        clothesItemWidth = Math.floor(width! * clothesItemWidth / (right - left))
+    }
+    let clothesPanelWidth = clothes.cols > 0 ? (clothesItemWidth * clothes.cols + clothes.colgap * (clothes.cols - 1)) : 0;
     if (hariPanelWidth === 0 || clothesPanelWidth === 0) {
-        return Math.max(hariPanelWidth, clothesPanelWidth);
+        let panel = Math.max(hariPanelWidth, clothesPanelWidth);
+        return {
+            with: panel,
+            hairFactor: 1,
+            clothesFactor: 1
+        }
     } else {
-        return Math.min(hariPanelWidth, clothesPanelWidth);
+        let panel = Math.min(hariPanelWidth, clothesPanelWidth);
+        return {
+            with: panel,
+            hairFactor: panel / hariPanelWidth,
+            clothesFactor: panel / clothesPanelWidth
+        }
     }
 });
 
@@ -276,7 +302,8 @@ export const clearProjectAtom = atom(null, (get, set) => {
         colgap: 0,
         cols: 5,
         width: 0,
-        height: 0
+        height: 0,
+        frame: undefined,
     });
     set(clothesConfigAtom, {
         images: [],
@@ -284,7 +311,8 @@ export const clearProjectAtom = atom(null, (get, set) => {
         colgap: 0,
         cols: 5,
         width: 0,
-        height: 0
+        height: 0,
+        frame: undefined,
     });
     set(scaleFactorDeltaAtom, 100);
     set(selectionAtom, {

@@ -11,11 +11,11 @@ import { WorktopGridClothes } from "./worktop-grid-clothes";
 export function Worktop<FC>() {
     const [panelWidth] = useAtom(panelWidthAtom);
     const [scale, updateScale] = useAtom(scaleFactorDeltaAtom);
-    const [renderWith, updateRenderWidth] = useState(() => Math.floor(panelWidth * scale / 100));
+    const [renderWith, updateRenderWidth] = useState(() => Math.floor(panelWidth.with * scale / 100));
     const [, clearSelection] = useAtom(clearSelectionAtom);
 
     useEffect(() => {
-        updateRenderWidth(Math.floor(panelWidth * scale / 100));
+        updateRenderWidth(Math.floor(panelWidth.with * scale / 100));
     }, [panelWidth, scale]);
 
 

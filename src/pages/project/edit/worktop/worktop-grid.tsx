@@ -5,6 +5,7 @@ import {
     hairFrameConfigAtom,
     hairImagesAtom,
     ImageItem,
+    panelWidthAtom,
     scaleFactorAtom,
     selectionAtom
 } from "@store/project.store"
@@ -20,6 +21,7 @@ interface WorktopGridProps {
 
 export function WorktopGrid<FC>({ type }: WorktopGridProps) {
     const [config] = useAtom(hairConfigAtom);
+    const [panelWidth] = useAtom(panelWidthAtom);
     const [, updateImages] = useAtom(hairImagesAtom);
     const [gridStyle, updateGridStyle] = useState<{ [key: string]: string; }>({});
     const [selection] = useAtom(selectionAtom);
@@ -27,8 +29,14 @@ export function WorktopGrid<FC>({ type }: WorktopGridProps) {
     const [scale] = useAtom(scaleFactorAtom);
     const [frameConfig] = useAtom(hairFrameConfigAtom);
     const [frameUrl, updateFrameUrl] = useState<string | null>(null);
+    const [imgPadding, updateImagePadding] = useState({
+        pt: 0,
+        pr: 0,
+        pb: 0,
+        pl: 0
+    });
     const [imagePStyle, updateImagePStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
-    
+
     useEffect(() => {
         async function loadFrameImage() {
             try {
@@ -39,17 +47,18 @@ export function WorktopGrid<FC>({ type }: WorktopGridProps) {
                     let innerHeight = bottom - top;
                     let hFactor = config.width / innerWidth;
                     let vFactor = config.height / innerHeight;
-                    let pt = Math.floor(top * vFactor);
-                    let pr = Math.floor((width! - right) * hFactor);
-                    let pb = Math.floor((height! - bottom) * vFactor);
-                    let pl = Math.floor(left * hFactor);
+                    let pt = top * vFactor;
+                    let pr = (width! - right) * hFactor;
+                    let pb = (height! - bottom) * vFactor;
+                    let pl = left * hFactor;
                     updateFrameUrl(url);
-                    updateImagePStyle({
-                        paddingTop: `${pt}px`,
-                        paddingRight: `${pr}px`,
-                        paddingBottom: `${pb}px`,
-                        paddingLeft: `${pl}px`,
+                    updateImagePadding({
+                        pt,
+                        pr,
+                        pb,
+                        pl
                     })
+
                 } else {
                     updateFrameUrl(null);
                     updateImagePStyle({});
@@ -64,6 +73,16 @@ export function WorktopGrid<FC>({ type }: WorktopGridProps) {
         loadFrameImage();
     }, [frameConfig]);
 
+    useEffect(() => {
+        const { pt, pr, pb, pl } = imgPadding;
+        const factor = panelWidth.hairFactor;
+        updateImagePStyle({
+            paddingTop: `${Math.floor(pt * scale * factor / 100)}px`,
+            paddingRight: `${Math.floor(pr * scale * factor / 100)}px`,
+            paddingBottom: `${Math.floor(pb * scale * factor / 100)}px`,
+            paddingLeft: `${Math.floor(pl * scale * factor / 100)}px`,
+        })
+    }, [imgPadding, scale, panelWidth.hairFactor]);
 
     useEffect(() => {
         updateGridStyle({

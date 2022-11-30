@@ -4,9 +4,9 @@ import { frameConfigListAtom } from "@store/frame-config.store";
 import {
     clothesColgapAtom,
     clothesColsAtom,
+    clothesFrameConfigAtom,
     clothesImagesAtom,
     clothesRowgapAtom,
-    hairFrameConfigAtom
 } from "@store/project.store";
 import { useAtom } from "jotai";
 import { TargetedEvent } from "preact/compat";
@@ -17,7 +17,7 @@ export function ClothesPOroperties<FC>() {
     const [colgap, updateColgap] = useAtom(clothesColgapAtom);
     const [cols, updateCols] = useAtom(clothesColsAtom);
     const [images] = useAtom(clothesImagesAtom);
-    const [frame, updateFrame] = useAtom(hairFrameConfigAtom);
+    const [frame, updateFrame] = useAtom(clothesFrameConfigAtom);
     const [frameList] = useAtom(frameConfigListAtom);
 
     function parseStringToNumber(source: string): number {
