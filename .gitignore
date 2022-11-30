@@ -27,3 +27,4 @@ src-tauri/database
 test.sql
 src-tauri/test_dir
 src-tauri/clip_source
+src-tauri/frame_source

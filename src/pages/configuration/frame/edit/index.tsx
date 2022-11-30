@@ -1,8 +1,6 @@
 import { get_frame_config_detail } from "@backend/apis/frame_config";
 import { PageContainer } from "@components/page-container";
-import { BodyType, getBodyType } from "@data/body-type";
-import { getPart, Part } from "@data/part";
-import { frameConfigAtom } from "@store/frame-config.store";
+import { clearFrameConfigAtom, frameConfigAtom } from "@store/frame-config.store";
 import { useAtom } from "jotai";
 import { useEffect } from "preact/hooks";
 import { DrawImage } from "./draw-image";
@@ -14,7 +12,8 @@ interface FrameConfigPageProps {
 }
 
 export function FrameConfigPage<FC>({ id }: FrameConfigPageProps) {
-    const [, updateFrameConfig] = useAtom(frameConfigAtom)
+    const [, updateFrameConfig] = useAtom(frameConfigAtom);
+    const [,clearFrameConfig]= useAtom(clearFrameConfigAtom);
 
     useEffect(() => {
         async function getDetail() {
@@ -22,9 +21,12 @@ export function FrameConfigPage<FC>({ id }: FrameConfigPageProps) {
                 if (id) {
                     let data = await get_frame_config_detail(Number(id));
                     updateFrameConfig(data);
+                }else{
+                    clearFrameConfig();
                 }
             } catch (err) {
                 console.log(err);
+                clearFrameConfig();
             }
         }
         updateFrameConfig({

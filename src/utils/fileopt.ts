@@ -23,3 +23,31 @@ export async function loadLocalImage(source: string): Promise<string> {
         throw err;
     }
 }
+
+// 获取文件后缀
+export function getFileExtension(path: string): string {
+    const len = path.length;
+    let index = len - 1;
+    while (index >= 0 && path[index] !== "/" && path[index] !== "\\") {
+        if (path[index] === ".") {
+            return path.substring(index + 1);
+        }
+        index -= 1;
+    }
+    return "";
+}
+
+/**
+ * 加载本地图像，返回图像对象
+ */
+export async function loadLocalImageObj(source: string): Promise<HTMLImageElement> {
+    let url =await loadLocalImage(source);
+    return new Promise((resolve) => {
+        let img = new Image();
+
+        img.onload = () => {
+            resolve(img);
+        }
+        img.src = url;
+    })
+}

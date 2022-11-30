@@ -3,7 +3,7 @@ import { BodyType } from "@data/body-type";
 import { Part } from "@data/part";
 import { atom } from "jotai";
 
-export const configIdAtom = atom<number|null>(null);
+export const configIdAtom = atom<number | null>(null);
 export const bodyType = atom<BodyType>(BodyType.MALE);
 export const partAtom = atom<Part>(Part.HAIR);
 export const SourceAtom = atom<string>("");
@@ -52,3 +52,22 @@ export const clipRadiusAtom = atom<number, number>((get) => get(clipParamsAtom).
 });
 
 export const allClipConfigAtom = atom<Array<ClipConfig>>([]);
+
+export const clearClipConfigAtom = atom(
+    null,
+    (get, set) => {
+        set(configIdAtom, null);
+        set(bodyType, BodyType.MALE);
+        set(partAtom, Part.HAIR);
+        set(SourceAtom, "");
+        set(configNameAtom, "");
+        set(clipParamsAtom, {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            radius: 0,
+        })
+    }
+);
+

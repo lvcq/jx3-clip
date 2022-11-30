@@ -2,7 +2,7 @@ import { get_clip_config_detail } from "@backend/apis/clip_config";
 import { PageContainer } from "@components/page-container";
 import { BodyType, getBodyType } from "@data/body-type";
 import { getPart, Part } from "@data/part";
-import { bodyType, clipParamsAtom, configIdAtom, configNameAtom, partAtom, SourceAtom } from "@store/clip-config.store";
+import { bodyType, clearClipConfigAtom, clipParamsAtom, configIdAtom, configNameAtom, partAtom, SourceAtom } from "@store/clip-config.store";
 import { useAtom } from "jotai";
 import { useEffect } from "preact/hooks";
 import { DrawImage } from "./draw-image";
@@ -20,6 +20,7 @@ export function ClipConfigPage<FC>({ id }: ClipConfigPageProps) {
     const [, updateClipParams] = useAtom(clipParamsAtom);
     const [, updateSource] = useAtom(SourceAtom);
     const [, updateConfigId] = useAtom(configIdAtom);
+    const [, clearClipConfig] = useAtom(clearClipConfigAtom)
 
     useEffect(() => {
         async function getDetail() {
@@ -39,9 +40,12 @@ export function ClipConfigPage<FC>({ id }: ClipConfigPageProps) {
                         left: data.left,
                         radius: data.radius
                     })
+                } else {
+                    clearClipConfig();
                 }
             } catch (err) {
                 console.log(err);
+                clearClipConfig();
             }
         }
         updateBodyType(BodyType.MALE);
