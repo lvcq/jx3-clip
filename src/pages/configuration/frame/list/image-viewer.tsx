@@ -20,5 +20,5 @@ export function ImageViewer<FC>({ source }: ImageViewerProps) {
             }
             createSourceUrl();
     }, [source]);
-    return <img src={url} alt="" className="max-w-full max-h-full object-contain"></img>
+    return <img src={url} alt="" className="w-full max-h-full object-contain"></img>
 }

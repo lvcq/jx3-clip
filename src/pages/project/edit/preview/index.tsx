@@ -58,6 +58,9 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
     const [, updateGlobalMessage] = useAtom(globalMessageAtom);
     const [centralConfig] = useAtom(centralRegionAtom);
+    const [scale, updateScale] = useState(100);
+    const [wrapperStyle, updateWrapperStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
+
     const [exportFormat, updateExportFormat] = useState({
         key: "png",
         label: "png",
@@ -273,19 +276,39 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                 let clothesImageHeight = clothesConfig.height;
                 let clothesRemain = 0;
                 if (clothesWidth > hairWidth) {
-                    clothesImageWidth = Math.floor((renderWith - (clothesConfig.cols - 1) * clothesConfig.colgap) / clothesConfig.cols);
-                    clothesImageHeight = Math.round((clothesImageHeight * clothesImageWidth / clothesConfig.width));
-                    clothesRemain = (renderWith - (clothesImageWidth * clothesConfig.cols + (clothesConfig.cols - 1) * clothesConfig.colgap));
+                    let preWidth = clohtesItemWidth;
+                    clohtesItemWidth = Math.floor((renderWith - (clothesConfig.cols - 1) * clothesConfig.colgap) / clothesConfig.cols);
+                    const factor = clohtesItemWidth / preWidth;
+                    clothesItemHeight = Math.round(clothesItemHeight * factor);
+                    clothesRemain = (renderWith - (clohtesItemWidth * clothesConfig.cols + (clothesConfig.cols - 1) * clothesConfig.colgap));
+                    clothesImageWidth = Math.floor(clothesImageWidth * factor);
+                    clothesImageHeight = Math.floor(clothesImageHeight * factor);
+                    clothesPadding = {
+                        pt: Math.floor(clothesPadding.pt * factor),
+                        pr: Math.floor(clothesPadding.pr * factor),
+                        pb: Math.floor(clothesPadding.pb * factor),
+                        pl: Math.floor(clothesPadding.pl * factor),
+                    }
                 }
                 if (hairWidth > clothesWidth) {
-                    hairImageWidth = Math.floor((renderWith - (hairConfig.cols - 1) * hairConfig.colgap) / hairConfig.cols);
-                    hairImageHeight = Math.round((hairImageHeight * hairImageWidth / hairConfig.width));
-                    hairRemain = (renderWith - (hairImageWidth * hairConfig.cols + (hairConfig.cols - 1) * hairConfig.colgap));
+                    let preWidth = hairItemWidth;
+                    hairItemWidth = Math.floor((renderWith - (hairConfig.cols - 1) * hairConfig.colgap) / hairConfig.cols);
+                    const factor = hairItemWidth / preWidth;
+                    hairItemHeight = Math.round(hairItemHeight * factor);
+                    hairRemain = (renderWith - (hairItemWidth * hairConfig.cols + (hairConfig.cols - 1) * hairConfig.colgap));
+                    hairImageWidth = Math.floor(hairImageWidth * factor);
+                    hairImageHeight = Math.floor(hairImageHeight * factor);
+                    hairPadding = {
+                        pt: Math.floor(hairPadding.pt * factor),
+                        pr: Math.floor(hairPadding.pr * factor),
+                        pb: Math.floor(hairPadding.pb * factor),
+                        pl: Math.floor(hairPadding.pl * factor),
+                    }
                 }
                 let hairRows = Math.ceil(hairimages.length / hairConfig.cols);
-                let hairAreaHeight = hairRows * hairImageHeight + (hairRows - 1) * hairConfig.rowgap;
+                let hairAreaHeight = hairRows * hairItemHeight + (hairRows - 1) * hairConfig.rowgap;
                 let clothesRows = Math.ceil(clothesConfig.images.length / clothesConfig.cols);
-                let clothesAreaHeight = clothesRows * clothesImageHeight + (clothesRows - 1) * clothesConfig.rowgap;
+                let clothesAreaHeight = clothesRows * clothesItemHeight + (clothesRows - 1) * clothesConfig.rowgap;
                 let centralHeight = getCentralHeight();
                 let renderHeight = hairAreaHeight + clothesAreaHeight + centralHeight;
                 updateCanvasHeight(renderHeight);
@@ -302,13 +325,13 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                         cols: hairConfig.cols,
                         context: context!,
                         remain: hairRemain,
-                        frameUrl: clothesConfig.frame?.source,
-                        frameWitdh: clohtesItemWidth,
-                        frameHeight: clothesItemHeight,
-                        ptop: clothesPadding.pt,
-                        pright: clothesPadding.pr,
-                        pbottom: clothesPadding.pb,
-                        pleft: clothesPadding.pl,
+                        frameUrl: hairConfig.frame?.source,
+                        frameWitdh: hairItemWidth,
+                        frameHeight: hairItemHeight,
+                        ptop: hairPadding.pt,
+                        pright: hairPadding.pr,
+                        pbottom: hairPadding.pb,
+                        pleft: hairPadding.pl,
                     });
                     drawImages({
                         originX: 0,
@@ -334,6 +357,13 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
 
         }
     }, [hairConfig, clothesConfig, open]);
+
+    useEffect(() => {
+        updateWrapperStyle({
+            width: `${canvasWidth * scale / 100}px`,
+            height: `${canvasHeight * scale / 100}px`
+        })
+    }, [canvasHeight, canvasWidth, scale])
 
     function handleClose() {
         if (onClose && !isSaving) {
@@ -396,6 +426,11 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
         }
     }
 
+    function handleScaleChange(event: TargetedEvent<HTMLInputElement, ChangeEvent>) {
+        let value = event.currentTarget.value;
+        updateScale(Number(value));
+    }
+
     if (!open) {
         return null;
     }
@@ -405,7 +440,9 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                 <div className="fixed top-0 right-0 bottom-0 left-0 z-10 bg-white flex flex-col overflow-hidden">
                     <div className="flex-1 overflow-hidden p-2">
                         <div className="h-full w-full overflow-auto">
-                            <canvas className="m-auto" ref={canvasRef} width={canvasWidth} height={canvasHeight} />
+                            <div className="m-auto overflow-hidden" style={wrapperStyle} >
+                                <canvas className="m-auto origin-top-left" style={{ "transform": `scale(${scale / 100})` }} ref={canvasRef} width={canvasWidth} height={canvasHeight} />
+                            </div>
                         </div>
                     </div>
                     <div className="flex overflow-hidden py-2 border-t border-solid border-t-gray-300">
@@ -423,7 +460,10 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                                 }
                             </select>
                         </div>
-                        <div className="flex-1"></div>
+                        <div className="flex-1 text-right">
+                            <input type="range" max={100} min={10} value={scale} onChange={handleScaleChange} />
+                            <span className="px-2">{scale}</span>
+                        </div>
                     </div>
                 </div>
                 , container)
