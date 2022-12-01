@@ -35,7 +35,7 @@ export function getBodyType(num: number): BodyType | null {
         case BodyType.GIRL:
             return BodyType.GIRL;
         case BodyType.BOY:
-            return BodyType.GIRL;
+            return BodyType.BOY;
         default:
             return null;
     }
