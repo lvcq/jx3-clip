@@ -1,6 +1,8 @@
 
 export enum MenuList {
-    ClipConfig = "ClipConfig"
+    ClipConfig = "ClipConfig",
+    FrameConfig = "FrameConfig",
+    CreateNewProject = "CreateNewProject"
 }
 
 export interface MenuMessage {
@@ -8,4 +10,4 @@ export interface MenuMessage {
     next: MenuList
 }
 
-export type PayloadMessage=MenuMessage;
+export type PayloadMessage = MenuMessage;
