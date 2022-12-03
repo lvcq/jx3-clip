@@ -3,10 +3,12 @@ pub use menu_keys::MenuKeys;
 use project::create_project_menu;
 use serde::Serialize;
 use tauri::{Menu, WindowMenuEvent};
+use crate::server::project::clear_project_tmp_dir;
 
 pub mod configuration;
 pub mod menu_keys;
 pub mod project;
+
 
 #[derive(Debug, Clone, Serialize)]
 struct MenuMessage {
@@ -33,6 +35,9 @@ pub fn menu_handler(event: WindowMenuEvent) {
                     },
                 )
                 .unwrap();
+        }
+        MenuKeys::ClearProjectTmp=>{
+            clear_project_tmp_dir();
         }
         _ => {}
     }

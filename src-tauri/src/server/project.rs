@@ -4,14 +4,14 @@ use image::{
     DynamicImage,
 };
 use image::{GenericImageView, ImageFormat};
-use std::collections::HashMap;
+
+use super::project_config::{PartConfig, ProjectConfig};
+use crate::tools::image_tools::{image_clip, save_image};
+use std::env;
 use std::fs;
 use std::path::Path;
 use std::sync::mpsc;
 use threadpool::ThreadPool;
-
-use super::project_config::{PartConfig, ProjectConfig};
-use crate::tools::image_tools::{image_clip, save_image};
 /// 项目相关操作
 
 pub fn clip_project_imgs(
@@ -200,7 +200,7 @@ pub fn export_image(source: String, target: String, format: String) -> Result<()
     if fmt.eq(&ImageFormat::Png) {
         copy_image(source, target)?;
     } else {
-        copy_image_with_format(source,target,fmt)?;
+        copy_image_with_format(source, target, fmt)?;
     }
     Ok(())
 }
@@ -223,5 +223,14 @@ fn copy_image_with_format(
     match source_img.save_with_format(&target, format) {
         Ok(_) => Ok(()),
         Err(_) => Err("Copy file error.".to_string()),
+    }
+}
+
+pub fn clear_project_tmp_dir() {
+    let mut temp_dir = env::current_dir().unwrap();
+    temp_dir.push("images_tmp");
+    if temp_dir.exists() {
+        fs::remove_dir_all(&temp_dir).unwrap();
+        fs::create_dir(&temp_dir).unwrap();
     }
 }
