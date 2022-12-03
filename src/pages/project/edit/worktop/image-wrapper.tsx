@@ -1,8 +1,9 @@
 import { ContextMenu } from "@components/context-menu";
 import { dragElementKeyAtom, dragOverElementKeyAtom } from "@store/drag.store";
 import { selectionAtom, selectionManagerAtom } from "@store/project.store";
+import { loadLocalImage } from "@utils/fileopt";
 import { useAtom } from "jotai";
-import { TargetedEvent, useState } from "preact/compat";
+import { TargetedEvent, useEffect, useState } from "preact/compat";
 import "./style.css";
 
 interface ImageWrapperProps {
@@ -28,6 +29,19 @@ export function ImageWrapper<FC>({
     const [overEle, updateOverEle] = useAtom(dragOverElementKeyAtom);
     const [, updateSelection] = useAtom(selectionManagerAtom);
     const [selection] = useAtom(selectionAtom);
+    const [imgUrl, updateImgUrl] = useState("");
+    useEffect(() => {
+        async function getImageUrl() {
+            if (url) {
+                const bUrl = await loadLocalImage(url);
+                updateImgUrl(bUrl);
+            }
+            else {
+                updateImgUrl("")
+            }
+        }
+        getImageUrl();
+    }, [url]);
 
     function handleDragStart(evt: TargetedEvent<HTMLDivElement, DragEvent>) {
         if (evt.dataTransfer) {
@@ -105,7 +119,7 @@ export function ImageWrapper<FC>({
             frameUrl ? (
                 <>
                     <div style={imgStyle}>
-                        <img className="w-full" src={url} alt="" />
+                        <img className="w-full" src={imgUrl} alt="" />
                     </div>
                     <div className="absolute top-0 right-0 bottom-0 left-0">
                         <img className="w-full h-full" src={frameUrl} alt="" />
@@ -113,7 +127,7 @@ export function ImageWrapper<FC>({
 
                 </>
             ) : (
-                <img className="w-full" src={url} alt="" />
+                <img className="w-full" src={imgUrl} alt="" />
             )
         }
 

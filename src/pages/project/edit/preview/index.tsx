@@ -7,31 +7,12 @@ import { writeBinaryFile } from "@tauri-apps/api/fs";
 import { save } from "@tauri-apps/api/dialog";
 import { globalMessageAtom } from "@store/message.store";
 import { homeDir } from "@tauri-apps/api/path";
-import { getFileExtension, getPreDirFormPath, loadLocalImageObj } from "@utils/fileopt";
+import { getFileExtension, getImageSize, getPreDirFormPath, loadLocalImage } from "@utils/fileopt";
+import { create_preview_api, export_image, ProjectConfig } from "@backend/apis/project_apis";
 
 interface PreViewProps {
     open?: boolean;
     onClose?: () => void;
-}
-
-interface DrawOptions {
-    originX: number;
-    originY: number;
-    images: string[];
-    width: number;
-    height: number;
-    rowcap: number;
-    colgap: number;
-    cols: number;
-    context: CanvasRenderingContext2D;
-    remain: number;
-    frameUrl?: string;
-    frameWitdh?: number;
-    frameHeight?: number;
-    ptop?: number;
-    pright?: number;
-    pbottom?: number;
-    pleft?: number;
 }
 
 const imageFormats = [{
@@ -50,16 +31,17 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     let container = document.querySelector("#preview")!;
     const [hairConfig] = useAtom(hairConfigAtom);
     const [clothesConfig] = useAtom(clothesConfigAtom);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [canvasWidth, updateCanvasWidth] = useState(0);
-    const [canvasHeight, updateCanvasHeight] = useState(0);
-    const drawWaiter = useRef<number | null>(0);
     const [isSaving, updateIsSaving] = useState(false);
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
     const [, updateGlobalMessage] = useAtom(globalMessageAtom);
     const [centralConfig] = useAtom(centralRegionAtom);
     const [scale, updateScale] = useState(100);
+    const [previewUrl, updatePreviewUrl] = useState("");
+    const [previewSourcePath, updatePreviewSourcePath] = useState("");
+    const [imageSize, updateImageSize] = useState({ width: 0, height: 0 });
+    const [imageStyle, updateImageStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
     const [wrapperStyle, updateWrapperStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
+    const [creating, updateCreating] = useState(false);
 
     const [exportFormat, updateExportFormat] = useState({
         key: "png",
@@ -69,301 +51,76 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     });
 
     useEffect(() => {
-        return () => {
-            if (drawWaiter.current) {
-                cancelAnimationFrame(drawWaiter.current);
-            }
-        }
-    })
-
-    useEffect(() => {
-
-        async function drawImages(options: DrawOptions) {
-            let {
-                originX,
-                originY,
-                images,
-                width,
-                height,
-                cols,
-                rowcap,
-                colgap,
-                context,
-                remain,
-                frameUrl,
-                frameHeight,
-                frameWitdh,
-                ptop = 0,
-                pright = 0,
-                pbottom = 0,
-                pleft = 0 } = options;
-            let itemWith = width;
-            let itemHeight = height;
-            let frameImage: HTMLImageElement | null = null;
-            if (frameUrl) {
-                itemWith = frameWitdh!;
-                itemHeight = frameHeight!;
-                frameImage = await loadLocalImageObj(frameUrl);
-            }
-            let rows = Math.ceil(images.length / cols);
-            for (let i = 0; i < rows; i++) {
-                let startY = originY + i * (itemHeight + rowcap);
-                for (let j = 0; j < cols; j++) {
-                    let startX = originX + j * (itemWith + colgap);
-                    if (j < remain) {
-                        startX += 1;
-                    }
-                    let image = new Image();
-                    image.onload = () => {
-                        context.drawImage(image, startX + pleft, startY + ptop, width, height);
-                        if (frameImage && frameWitdh && frameHeight) {
-                            context.drawImage(frameImage, startX, startY, frameWitdh, frameHeight);
+        if (open) {
+            updateCreating(true);
+            setTimeout(async () => {
+                if (open) {
+                    let config: ProjectConfig = {};
+                    if (hairConfig.images.length) {
+                        const { images, width, height, cols, colgap, rowgap, frame } = hairConfig;
+                        config.hair = {
+                            images: images.map(item => item.url),
+                            width,
+                            height,
+                            cols,
+                            colgap,
+                            rowgap,
+                        };
+                        if (frame) {
+                            let { source, width, height, top, right, bottom, left } = frame;
+                            config.hair.frame_config = {
+                                source,
+                                width: width!,
+                                height: height!,
+                                top, right, bottom, left
+                            };
                         }
                     }
-                    image.src = images[i * cols + j];
-                }
-            }
-        }
-
-
-        function waitToDraw(width: number, drawFun: () => void) {
-            if (drawWaiter.current) {
-                cancelAnimationFrame(drawWaiter.current);
-            }
-            if (open && canvasRef.current && canvasRef.current.offsetWidth === width) {
-                drawFun();
-            } else {
-                drawWaiter.current = requestAnimationFrame(() => {
-                    waitToDraw(width, drawFun);
-                })
-            }
-        }
-
-        function getCentralHeight() {
-            return centralConfig.vPadding * 2;
-        }
-
-        if (open && canvasRef.current) {
-            let hairimages = hairConfig.images;
-            //根据是否有边框，计算单个图像宽高
-            let hairItemWidth = (hairimages.length > 0) ? hairConfig.width : 0;
-            let hairItemHeight = (hairimages.length > 0) ? hairConfig.height : 0;
-
-            let hairPadding = {
-                pt: 0,
-                pr: 0,
-                pb: 0,
-                pl: 0
-            };
-            if (hairConfig.frame) {
-                let { width, height, top, right, bottom, left } = hairConfig.frame;
-                let innerWidth = right - left;
-                let innerHeight = bottom - top;
-                let hFactor = hairConfig.width / innerWidth;
-                let vFactor = hairConfig.height / innerHeight;
-                hairItemWidth = Math.floor(hFactor * width!);
-                hairItemHeight = Math.floor(vFactor * height!);
-                let pt = Math.floor(top * vFactor);
-                let pr = Math.floor((width! - right) * hFactor);
-                let pb = Math.floor((height! - bottom) * vFactor);
-                let pl = Math.floor(left * hFactor);
-                hairPadding = {
-                    pt,
-                    pr,
-                    pb,
-                    pl
-                };
-            }
-
-            let clothesImages = clothesConfig.images;
-            let clohtesItemWidth = (clothesImages.length > 0) ? hairConfig.width : 0;
-            let clothesItemHeight = (clothesImages.length > 0) ? hairConfig.height : 0;
-            let clothesPadding = {
-                pt: 0,
-                pr: 0,
-                pb: 0,
-                pl: 0
-            };
-            if (clothesConfig.frame) {
-                let { width, height, top, right, bottom, left } = clothesConfig.frame;
-                let innerWidth = right - left;
-                let innerHeight = bottom - top;
-                let hFactor = clothesConfig.width / innerWidth;
-                let vFactor = clothesConfig.height / innerHeight;
-                clohtesItemWidth = Math.floor(hFactor * width!);
-                clothesItemHeight = Math.floor(vFactor * height!);
-                let pt = Math.floor(top * vFactor);
-                let pr = Math.floor((width! - right) * hFactor);
-                let pb = Math.floor((height! - bottom) * vFactor);
-                let pl = Math.floor(left * hFactor);
-                clothesPadding = {
-                    pt,
-                    pr,
-                    pb,
-                    pl
-                };
-            }
-
-            // 计算头发区域宽高
-
-            let hairWidth = ((hairConfig.cols > 0) && (hairimages.length > 0)) ? (hairConfig.cols * hairItemWidth + (hairConfig.cols - 1) * hairConfig.colgap) : 0;
-            let clothesWidth = clothesConfig.cols > 0 ? (clothesConfig.cols * clohtesItemWidth + (clothesConfig.cols - 1) * clothesConfig.colgap) : 0;
-            let context = canvasRef.current.getContext("2d");
-            if (!context) {
-                return;
-            }
-            if (hairWidth === 0 && clothesWidth === 0) {
-                return;
-            } else if (clothesWidth === 0) {
-                let rows = Math.ceil(hairimages.length / hairConfig.cols);
-                let height = rows * hairItemHeight + (rows - 1) * hairConfig.rowgap;
-                updateCanvasHeight(height);
-                updateCanvasWidth(hairWidth);
-                context.clearRect(0, 0, hairWidth, height);
-                waitToDraw(hairWidth, () => {
-                    drawImages({
-                        originX: 0,
-                        originY: 0,
-                        images: hairimages.map(item => item.url),
-                        width: hairConfig.width,
-                        height: hairConfig.height,
-                        rowcap: hairConfig.rowgap,
-                        colgap: hairConfig.colgap,
-                        cols: hairConfig.cols,
-                        context: context!,
-                        remain: 0,
-                        frameUrl: hairConfig.frame?.source,
-                        frameWitdh: hairItemWidth,
-                        frameHeight: hairItemHeight,
-                        ptop: hairPadding.pt,
-                        pright: hairPadding.pr,
-                        pbottom: hairPadding.pb,
-                        pleft: hairPadding.pl,
-                    });
-                })
-            } else if (hairWidth === 0) {
-                let rows = Math.ceil(clothesConfig.images.length / clothesConfig.cols);
-                let height = rows * clothesItemHeight + (rows - 1) * clothesConfig.rowgap;
-                updateCanvasHeight(height);
-                updateCanvasWidth(clothesWidth);
-                waitToDraw(clothesWidth, () => {
-                    drawImages({
-                        originX: 0,
-                        originY: 0,
-                        images: clothesConfig.images.map(item => item.url),
-                        width: clothesConfig.width,
-                        height: clothesConfig.height,
-                        rowcap: clothesConfig.rowgap,
-                        colgap: clothesConfig.colgap,
-                        cols: clothesConfig.cols,
-                        context: context!,
-                        remain: 0,
-                        frameUrl: clothesConfig.frame?.source,
-                        frameWitdh: clohtesItemWidth,
-                        frameHeight: clothesItemHeight,
-                        ptop: clothesPadding.pt,
-                        pright: clothesPadding.pr,
-                        pbottom: clothesPadding.pb,
-                        pleft: clothesPadding.pl,
-                    });
-                });
-            } else {
-                const renderWith = Math.min(hairWidth, clothesWidth);
-                let hairImageWidth = hairConfig.width;
-                let hairImageHeight = hairConfig.height;
-                let hairRemain = 0;
-                let clothesImageWidth = clothesConfig.width;
-                let clothesImageHeight = clothesConfig.height;
-                let clothesRemain = 0;
-                if (clothesWidth > hairWidth) {
-                    let preWidth = clohtesItemWidth;
-                    clohtesItemWidth = Math.floor((renderWith - (clothesConfig.cols - 1) * clothesConfig.colgap) / clothesConfig.cols);
-                    const factor = clohtesItemWidth / preWidth;
-                    clothesItemHeight = Math.round(clothesItemHeight * factor);
-                    clothesRemain = (renderWith - (clohtesItemWidth * clothesConfig.cols + (clothesConfig.cols - 1) * clothesConfig.colgap));
-                    clothesImageWidth = Math.floor(clothesImageWidth * factor);
-                    clothesImageHeight = Math.floor(clothesImageHeight * factor);
-                    clothesPadding = {
-                        pt: Math.floor(clothesPadding.pt * factor),
-                        pr: Math.floor(clothesPadding.pr * factor),
-                        pb: Math.floor(clothesPadding.pb * factor),
-                        pl: Math.floor(clothesPadding.pl * factor),
+                    if (clothesConfig.images.length) {
+                        const { images, width, height, cols, colgap, rowgap, frame } = clothesConfig;
+                        config.clothes = {
+                            images: images.map(item => item.url),
+                            width,
+                            height,
+                            cols,
+                            colgap,
+                            rowgap,
+                        };
+                        if (frame) {
+                            let { source, width, height, top, right, bottom, left } = frame;
+                            config.clothes.frame_config = {
+                                source,
+                                width: width!,
+                                height: height!,
+                                top, right, bottom, left
+                            };
+                        }
                     }
-                }
-                if (hairWidth > clothesWidth) {
-                    let preWidth = hairItemWidth;
-                    hairItemWidth = Math.floor((renderWith - (hairConfig.cols - 1) * hairConfig.colgap) / hairConfig.cols);
-                    const factor = hairItemWidth / preWidth;
-                    hairItemHeight = Math.round(hairItemHeight * factor);
-                    hairRemain = (renderWith - (hairItemWidth * hairConfig.cols + (hairConfig.cols - 1) * hairConfig.colgap));
-                    hairImageWidth = Math.floor(hairImageWidth * factor);
-                    hairImageHeight = Math.floor(hairImageHeight * factor);
-                    hairPadding = {
-                        pt: Math.floor(hairPadding.pt * factor),
-                        pr: Math.floor(hairPadding.pr * factor),
-                        pb: Math.floor(hairPadding.pb * factor),
-                        pl: Math.floor(hairPadding.pl * factor),
+                    const preview_path = await create_preview_api(config);
+                    if (preview_path) {
+                        let url = await loadLocalImage(preview_path);
+                        let size = await getImageSize(preview_path);
+                        updatePreviewUrl(url);
+                        updateImageSize(size);
+                        updatePreviewSourcePath(preview_path);
                     }
+                    updateCreating(false);
                 }
-                let hairRows = Math.ceil(hairimages.length / hairConfig.cols);
-                let hairAreaHeight = hairRows * hairItemHeight + (hairRows - 1) * hairConfig.rowgap;
-                let clothesRows = Math.ceil(clothesConfig.images.length / clothesConfig.cols);
-                let clothesAreaHeight = clothesRows * clothesItemHeight + (clothesRows - 1) * clothesConfig.rowgap;
-                let centralHeight = getCentralHeight();
-                let renderHeight = hairAreaHeight + clothesAreaHeight + centralHeight;
-                updateCanvasHeight(renderHeight);
-                updateCanvasWidth(renderWith);
-                waitToDraw(renderWith, () => {
-                    drawImages({
-                        originX: 0,
-                        originY: 0,
-                        images: hairConfig.images.map(item => item.url),
-                        width: hairImageWidth,
-                        height: hairImageHeight,
-                        rowcap: hairConfig.rowgap,
-                        colgap: hairConfig.colgap,
-                        cols: hairConfig.cols,
-                        context: context!,
-                        remain: hairRemain,
-                        frameUrl: hairConfig.frame?.source,
-                        frameWitdh: hairItemWidth,
-                        frameHeight: hairItemHeight,
-                        ptop: hairPadding.pt,
-                        pright: hairPadding.pr,
-                        pbottom: hairPadding.pb,
-                        pleft: hairPadding.pl,
-                    });
-                    drawImages({
-                        originX: 0,
-                        originY: hairAreaHeight + centralHeight,
-                        images: clothesConfig.images.map(item => item.url),
-                        width: clothesImageWidth,
-                        height: clothesImageHeight,
-                        rowcap: clothesConfig.rowgap,
-                        colgap: clothesConfig.colgap,
-                        cols: clothesConfig.cols,
-                        context: context!,
-                        remain: clothesRemain,
-                        frameUrl: clothesConfig.frame?.source,
-                        frameWitdh: clohtesItemWidth,
-                        frameHeight: clothesItemHeight,
-                        ptop: clothesPadding.pt,
-                        pright: clothesPadding.pr,
-                        pbottom: clothesPadding.pb,
-                        pleft: clothesPadding.pl,
-                    });
-                });
-            }
-
+            }, 300)
         }
-    }, [hairConfig, clothesConfig, open]);
+    }, [open, hairConfig, clothesConfig])
 
     useEffect(() => {
         updateWrapperStyle({
-            width: `${canvasWidth * scale / 100}px`,
-            height: `${canvasHeight * scale / 100}px`
-        })
-    }, [canvasHeight, canvasWidth, scale])
+            width: `${imageSize.width * scale / 100}px`,
+            height: `${imageSize.height * scale / 100}px`
+        });
+        updateImageStyle({
+            width: `${imageSize.width}px`,
+            height: `${imageSize.height}px`,
+            transform: `scale(${scale / 100})`
+        });
+    }, [imageSize, scale])
 
     function handleClose() {
         if (onClose && !isSaving) {
@@ -372,50 +129,45 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     }
 
     async function saveImage() {
-        if (canvasRef.current) {
-            try {
-                updateIsSaving(true);
-                canvasRef.current.toBlob(async (blob) => {
-                    const extensions = exportFormat.extensions;
-                    if (blob) {
-                        let savePath = await save({
-                            filters: [{
-                                name: "图像",
-                                extensions
-                            }],
-                            defaultPath: projectCache.savePreDir || await homeDir()
-                        });
-                        if (savePath) {
-                            if (!extensions.includes(getFileExtension(savePath))) {
-                                savePath = `${savePath}.${extensions[0]}`
-                            }
-                            let savePreDir = getPreDirFormPath(savePath);
-                            updateProjectCache((preData: any) => {
-                                return {
-                                    ...preData,
-                                    savePreDir
-                                }
-                            });
-                            const imgArr = new Uint8Array(await blob.arrayBuffer());
-                            await writeBinaryFile(savePath, imgArr, {
-                            });
-                            updateGlobalMessage({
-                                type: "success",
-                                message: "保存图片成功"
-                            });
-                        }
+        if (creating) {
+            return;
+        }
+        try {
+            updateIsSaving(true);
+            const extensions = exportFormat.extensions;
+            let savePath = await save({
+                filters: [{
+                    name: "图像",
+                    extensions
+                }],
+                defaultPath: projectCache.savePreDir || await homeDir()
+            });
+            if (savePath) {
+                if (!extensions.includes(getFileExtension(savePath))) {
+                    savePath = `${savePath}.${extensions[0]}`
+                }
+                let savePreDir = getPreDirFormPath(savePath);
+                updateProjectCache((preData: any) => {
+                    return {
+                        ...preData,
+                        savePreDir
                     }
-                    updateIsSaving(false)
-                }, exportFormat.format);
-            } catch {
+                });
+                await export_image(previewSourcePath, savePath, exportFormat.key);
                 updateGlobalMessage({
-                    type: "error",
-                    message: "保存图片失败"
-                })
+                    type: "success",
+                    message: "保存图片成功"
+                });
                 updateIsSaving(false);
             }
-
+        } catch {
+            updateGlobalMessage({
+                type: "error",
+                message: "保存图片失败"
+            })
+            updateIsSaving(false);
         }
+
     }
 
     function handleImageFormatChange(event: TargetedEvent<HTMLSelectElement, ChangeEvent>) {
@@ -441,7 +193,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     <div className="flex-1 overflow-hidden p-2">
                         <div className="h-full w-full overflow-auto">
                             <div className="m-auto overflow-hidden" style={wrapperStyle} >
-                                <canvas className="m-auto origin-top-left" style={{ "transform": `scale(${scale / 100})` }} ref={canvasRef} width={canvasWidth} height={canvasHeight} />
+                                <img className="m-auto origin-top-left" src={previewUrl} style={imageStyle} />
                             </div>
                         </div>
                     </div>
@@ -450,7 +202,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                         <div>
                             <button className="py-px px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={handleClose}>关闭</button>
                             <button className="ml-3 py-px px-2 rounded bg-primary text-white hover:ring-2 ring-primary disabled:bg-gray-500"
-                                disabled={isSaving}
+                                disabled={isSaving || creating}
                                 onClick={saveImage}
 
                             >{isSaving ? "保存中" : "下载图片"}</button>

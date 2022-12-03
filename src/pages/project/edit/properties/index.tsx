@@ -14,7 +14,6 @@ import {
     clearProjectAtom
 } from "@store/project.store";
 import { open } from "@tauri-apps/api/dialog";
-import { clipImageTasks } from "@utils/clip";
 import { useAtom } from "jotai";
 import { JSX } from "preact";
 import { useState } from "preact/hooks";
@@ -28,6 +27,7 @@ import { getPreDirFormPath } from "@utils/fileopt";
 import { readBinaryFile } from "@tauri-apps/api/fs";
 import { CommonProperties } from "./common-properties";
 import { CenterRegionProperties } from "./central-region-properties";
+import { clip_images_api } from "@backend/apis/project_apis";
 
 
 export function Properties<FC>() {
@@ -106,7 +106,8 @@ export function Properties<FC>() {
                 await handleNoClipImage(config.id);
             } else {
                 let { top, right, bottom, left, radius } = config;
-                let list = await clipImageTasks(imageList, top, right, bottom, left, radius);
+                let list = await clip_images_api(imageList, top, right, bottom, left, radius);
+                console.log(list);
                 let sha256 = forge.md.sha256.create();
                 let result = list.map(img => {
                     return {

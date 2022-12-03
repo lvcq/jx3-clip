@@ -22,14 +22,16 @@ export function Modal({ visible, title, children, onClose, onOk }: ModalProps) {
     }
 
     async function handleOkClick() {
-        try {
-            updateIsProcess(true);
+        updateIsProcess(true);
+        setTimeout(async () => {
             if (onOk) {
-                await onOk();
+                try {
+                    await onOk();
+                } finally {
+                    updateIsProcess(false);
+                }
             }
-        } finally {
-            updateIsProcess(false);
-        }
+        }, 300);
     }
 
     if (!visible) {
