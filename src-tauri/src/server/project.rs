@@ -124,7 +124,7 @@ fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
     for row in 0..row_count {
         let start_y = (item_height + config.rowgap) * row;
         for col in 0..col_count {
-            let index = row_count * row + col;
+            let index = col_count * row + col;
             if index < image_count as u32 {
                 let source = config.images.get(index as usize).unwrap();
                 let start_x = (item_width + config.colgap) * col;

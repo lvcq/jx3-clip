@@ -107,6 +107,8 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     updateCreating(false);
                 }
             }, 300)
+        }else{
+            
         }
     }, [open, hairConfig, clothesConfig])
 

@@ -107,12 +107,12 @@ export function Properties<FC>() {
             } else {
                 let { top, right, bottom, left, radius } = config;
                 let list = await clip_images_api(imageList, top, right, bottom, left, radius);
-                console.log(list);
                 let sha256 = forge.md.sha256.create();
-                let result = list.map(img => {
+                let preCount = config.part === Part.HAIR ? hairImages.length : clothesImages.length;
+                let result = list.map((img, index) => {
                     return {
                         url: img,
-                        key: sha256.update(img).digest().toHex()
+                        key: sha256.update(`${img}-${preCount + index}`).digest().toHex()
                     }
                 })
                 if (config.part === Part.HAIR) {

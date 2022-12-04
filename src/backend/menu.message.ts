@@ -30,6 +30,7 @@ export function start_listen_menu_message(obser: Observable<MenuMessage>) {
                     height: 600,
                     x: 200,
                     y: 100,
+                    fileDropEnabled: false
                 });
                 window.once("tauri://created", () => {
                     console.log("create window success.")
