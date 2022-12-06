@@ -2,6 +2,7 @@ import { FormItem } from "@components/form-item";
 import { SubTitle } from "@components/sub-title";
 import { frameConfigListAtom } from "@store/frame-config.store";
 import { hairColgapAtom, hairColsAtom, hairFrameConfigAtom, hairImagesAtom, hairRowgapAtom } from "@store/project.store";
+import { getDivisor } from "@utils/math-helper";
 import { useAtom } from "jotai";
 import { TargetedEvent } from "preact/compat";
 
@@ -52,7 +53,10 @@ export function HairPOroperties<FC>() {
             <input className="w-full" type="number" min={1} value={cols} onChange={(evt) => handleNumberChange(evt, updateCols)}></input>
         </FormItem>
         <FormItem>
-            <span className="pl-8 text-gray-400 text-sm">共有{cols > 0 ? Math.floor(images.length / cols) : "--"}行, 剩余{images.length % cols}张。</span>
+            <div className="pl-8 text-gray-400 text-sm">
+                <span >共有{cols > 0 ? Math.floor(images.length / cols) : "--"}行, 剩余{cols > 0 ? images.length % cols : "--"}张。</span><br />
+                <span >可选列数:{images.length > 0 ? getDivisor(images.length).join(", ") : "--"}</span>
+            </div>
         </FormItem>
     </>
 }

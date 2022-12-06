@@ -4,6 +4,7 @@ use image::{
     DynamicImage,
 };
 use image::{GenericImageView, ImageFormat};
+use std::thread;
 
 use super::project_config::{PartConfig, ProjectConfig};
 use crate::tools::image_tools::{image_clip, save_image};
@@ -56,14 +57,7 @@ pub fn clip_project_imgs(
 
 /// 创建预览图片
 pub fn crate_preview(config: ProjectConfig) -> Result<String, String> {
-    let hair = match config.hair {
-        Some(hair_config) => Some(create_part_image(&hair_config)?),
-        None => None,
-    };
-    let clothes = match config.clothes {
-        Some(clothes_config) => Some(create_part_image(&clothes_config)?),
-        None => None,
-    };
+    let (hair, clothes) = create_part_image_with_thread(&config.hair, &config.clothes)?;
 
     let result_img = match (hair, clothes) {
         (Some(hair), Some(clothes)) => Some(concat_images(&hair, &clothes)),
@@ -78,6 +72,68 @@ pub fn crate_preview(config: ProjectConfig) -> Result<String, String> {
     } else {
         Ok("".to_string())
     }
+}
+
+#[derive(Debug, Clone)]
+struct PartMessage {
+    part: String,
+    image: Option<DynamicImage>,
+}
+
+#[derive(Debug, Clone)]
+struct PartConfigItem {
+    part: String,
+    config: PartConfig,
+}
+
+fn create_part_image_with_thread(
+    hair_config: &Option<PartConfig>,
+    clothes_config: &Option<PartConfig>,
+) -> Result<(Option<DynamicImage>, Option<DynamicImage>), String> {
+    let mut configs: Vec<PartConfigItem> = vec![];
+    if hair_config.is_none() && clothes_config.is_none() {
+        return Ok((None, None));
+    }
+    if hair_config.is_some() {
+        configs.push(PartConfigItem {
+            part: String::from("hair"),
+            config: hair_config.as_ref().unwrap().clone(),
+        });
+    }
+    if clothes_config.is_some() {
+        configs.push(PartConfigItem {
+            part: String::from("clothes"),
+            config: clothes_config.as_ref().unwrap().clone(),
+        });
+    }
+    let count = configs.len();
+    let (sx, rx) = mpsc::channel::<PartMessage>();
+    for item in configs {
+        let sxc = sx.clone();
+        thread::spawn(move || {
+            let img = match create_part_image(&item.config) {
+                Ok(ig) => Some(ig),
+                Err(_) => None,
+            };
+            sxc.send(PartMessage {
+                part: item.part,
+                image: img,
+            })
+            .unwrap();
+        });
+    }
+    let mut hair: Option<DynamicImage> = None;
+    let mut clothes: Option<DynamicImage> = None;
+
+    for _ in 0..count {
+        let msg = rx.recv().unwrap();
+        if msg.part.eq("hair") {
+            hair = msg.image;
+        } else if msg.part.eq("clothes") {
+            clothes = msg.image;
+        }
+    }
+    Ok((hair, clothes))
 }
 
 /// 创建部位图片

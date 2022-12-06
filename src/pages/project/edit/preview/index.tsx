@@ -39,7 +39,6 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     const [previewUrl, updatePreviewUrl] = useState("");
     const [previewSourcePath, updatePreviewSourcePath] = useState("");
     const [imageSize, updateImageSize] = useState({ width: 0, height: 0 });
-    const [imageStyle, updateImageStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
     const [wrapperStyle, updateWrapperStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
     const [creating, updateCreating] = useState(false);
 
@@ -107,8 +106,8 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     updateCreating(false);
                 }
             }, 300)
-        }else{
-            
+        } else {
+
         }
     }, [open, hairConfig, clothesConfig])
 
@@ -116,11 +115,6 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
         updateWrapperStyle({
             width: `${imageSize.width * scale / 100}px`,
             height: `${imageSize.height * scale / 100}px`
-        });
-        updateImageStyle({
-            width: `${imageSize.width}px`,
-            height: `${imageSize.height}px`,
-            transform: `scale(${scale / 100})`
         });
     }, [imageSize, scale])
 
@@ -195,7 +189,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     <div className="flex-1 overflow-hidden p-2">
                         <div className="h-full w-full overflow-auto">
                             <div className="m-auto overflow-hidden" style={wrapperStyle} >
-                                <img className="m-auto origin-top-left" src={previewUrl} style={imageStyle} />
+                                <img className="m-auto origin-top-left" src={previewUrl} style={{ width: "100%", height: "100%" }} />
                             </div>
                         </div>
                     </div>

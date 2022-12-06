@@ -28,6 +28,7 @@ import { readBinaryFile } from "@tauri-apps/api/fs";
 import { CommonProperties } from "./common-properties";
 import { CenterRegionProperties } from "./central-region-properties";
 import { clip_images_api } from "@backend/apis/project_apis";
+import { Settlement } from "../settlement";
 
 
 export function Properties<FC>() {
@@ -44,6 +45,7 @@ export function Properties<FC>() {
     const [showPreview, updateShowPreview] = useState(false);
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
     const [, clearProject] = useAtom(clearProjectAtom);
+    const [feeVisible, updatefeeVisible] = useState(false)
 
 
     function handleConfigChange(evt: JSX.TargetedEvent<HTMLSelectElement>) {
@@ -107,6 +109,7 @@ export function Properties<FC>() {
             } else {
                 let { top, right, bottom, left, radius } = config;
                 let list = await clip_images_api(imageList, top, right, bottom, left, radius);
+                console.log(list);
                 let sha256 = forge.md.sha256.create();
                 let preCount = config.part === Part.HAIR ? hairImages.length : clothesImages.length;
                 let result = list.map((img, index) => {
@@ -184,6 +187,7 @@ export function Properties<FC>() {
         clearProject()
     }
 
+
     return <div className="h-full overflow-y-auto flex flex-col pr-4">
         <button
             className="text-lg block w-4/5 h-9 leading-9 rounded m-auto mb-4 text-white bg-primary disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -202,6 +206,7 @@ export function Properties<FC>() {
         <DividerH />
         <div className="px-2 py-1 text-right">
             <button className="py-1 px-2 rounded border border-solid border-gray-500 hover:ring-2 ring-gray-300" onClick={handleClearProject}>清空</button>
+            <button className="ml-2 py-1 px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={() => updatefeeVisible(true)}>计价</button>
             <button className="ml-2 py-1 px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={handlePreview}>预览</button>
         </div>
         <Modal
@@ -225,5 +230,6 @@ export function Properties<FC>() {
             </div>
         </Modal>
         <PreView open={showPreview} onClose={() => updateShowPreview(false)} />
+        <Settlement visible={feeVisible} onClose={() => updatefeeVisible(false)} onOk={async () => updatefeeVisible(false)} />
     </div>
-} 
+}
