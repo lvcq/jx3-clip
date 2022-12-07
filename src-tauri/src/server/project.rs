@@ -136,6 +136,12 @@ fn create_part_image_with_thread(
     Ok((hair, clothes))
 }
 
+#[derive(Debug, Clone)]
+struct RowMessage {
+    order: usize,
+    img: DynamicImage,
+}
+
 /// 创建部位图片
 fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
     let image_width = config.width;
@@ -177,33 +183,83 @@ fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
     };
 
     let mut result = DynamicImage::new_rgba8(render_width, render_height);
+    let (sx, rx) = mpsc::channel::<RowMessage>();
     for row in 0..row_count {
-        let start_y = (item_height + config.rowgap) * row;
-        for col in 0..col_count {
-            let index = col_count * row + col;
-            if index < image_count as u32 {
-                let source = config.images.get(index as usize).unwrap();
-                let start_x = (item_width + config.colgap) * col;
-                let item_image = read_image(source)?;
-                imageops::overlay(
-                    &mut result,
-                    &item_image,
-                    (start_x + offset_left).into(),
-                    (start_y + offset_top).into(),
-                );
-                if frame_img.is_some() {
-                    imageops::overlay(
-                        &mut result,
-                        frame_img.as_ref().unwrap(),
-                        start_x.into(),
-                        start_y.into(),
-                    );
-                }
-            }
-        }
+        let start = (row * col_count) as usize;
+        let end = if ((row + 1) * col_count - 1) as usize >= image_count {
+            image_count - 1
+        } else {
+            ((row + 1) * col_count - 1) as usize
+        };
+        let row_list: Vec<String> = (&config.images[start..=end]).to_vec();
+        let order = row.clone() as usize;
+        let sxc = sx.clone();
+        let gap = config.colgap;
+        let frame_img = frame_img.clone();
+        let col_count = config.cols;
+        thread::spawn(move || {
+            let img = concat_image_row(
+                row_list,
+                render_width,
+                item_width,
+                item_height,
+                gap,
+                offset_top,
+                offset_left,
+                col_count,
+                frame_img,
+            );
+            sxc.send(RowMessage { order, img }).unwrap();
+        });
+    }
+
+    for _ in 0..row_count {
+        let received = rx.recv().unwrap();
+        let row = received.order;
+        let img = received.img;
+        let start_y = (item_height + config.rowgap) * (row as u32);
+        imageops::overlay(&mut result, &img, 0, start_y as i64);
     }
 
     Ok(result)
+}
+
+fn concat_image_row(
+    sources: Vec<String>,
+    render_width: u32,
+    width: u32,
+    height: u32,
+    gap: u32,
+    offset_top: u32,
+    offset_left: u32,
+    col_count: u32,
+    frame_img: Option<DynamicImage>,
+) -> DynamicImage {
+    let count = sources.len();
+    let mut result = DynamicImage::new_rgba8(render_width, height);
+    let mut index = 0;
+    let origin_x: u32 = if (count as u32) < col_count {
+        let i_width = (count as u32) * width + (count as u32 - 1) * gap;
+        (render_width - i_width) / 2
+    } else {
+        0
+    };
+    while index < count {
+        let source = sources.get(index).unwrap();
+        let item_image = read_image(source).expect("");
+        let start_x = (index as u32) * (width + gap) + origin_x;
+        imageops::overlay(
+            &mut result,
+            &item_image,
+            (offset_left + start_x).into(),
+            offset_top.into(),
+        );
+        if frame_img.is_some() {
+            imageops::overlay(&mut result, frame_img.as_ref().unwrap(), start_x.into(), 0);
+        }
+        index += 1;
+    }
+    result
 }
 
 fn read_image(src: &str) -> Result<DynamicImage, String> {

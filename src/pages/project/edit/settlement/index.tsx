@@ -72,9 +72,9 @@ export function Settlement({ visible, onOk, onClose }: SettlementProps) {
             <FormItem label="头发数量"><span>{hairConfig.images.length}</span></FormItem>
             <FormItem label="价格">
                 <div>
-                    <input type="number" className="w-16" value={hairPrice} min={0} onChange={handleHairPriceChange} />
+                    <input type="number" className="w-16 text-center" value={hairPrice} min={0} onChange={handleHairPriceChange} />
                     <span className="px-1">元</span>
-                    <input type="number" className="w-16" value={hairUnit} min={1} onChange={handleHairUnitChange} />
+                    <input type="number" className="w-16 text-center" value={hairUnit} min={1} onChange={handleHairUnitChange} />
                     <span className="px-1">个</span>
                 </div>
             </FormItem>
@@ -82,9 +82,9 @@ export function Settlement({ visible, onOk, onClose }: SettlementProps) {
             <FormItem label="衣服数量"><span>{clothesConfig.images.length}</span></FormItem>
             <FormItem label="价格">
                 <div>
-                    <input type="number" className="w-16" value={clothesPrice} min={0} onChange={handleClothesPriceChange} />
+                    <input type="number" className="w-16 text-center" value={clothesPrice} min={0} onChange={handleClothesPriceChange} />
                     <span className="px-1">元</span>
-                    <input type="number" className="w-16" value={clothesUnit} min={1} onChange={handleClothesUnitChange} />
+                    <input type="number" className="w-16 text-center" value={clothesUnit} min={1} onChange={handleClothesUnitChange} />
                     <span className="px-1">个</span>
                 </div>
             </FormItem>
