@@ -29,6 +29,7 @@ import { CommonProperties } from "./common-properties";
 import { CenterRegionProperties } from "./central-region-properties";
 import { clip_images_api } from "@backend/apis/project_apis";
 import { Settlement } from "../settlement";
+import { SaveProjectModal } from "./save-prject-modal";
 
 
 export function Properties<FC>() {
@@ -46,6 +47,7 @@ export function Properties<FC>() {
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
     const [, clearProject] = useAtom(clearProjectAtom);
     const [feeVisible, updatefeeVisible] = useState(false)
+    const [saveModalVisible, updateSaveModalVisible] = useState(false);
 
 
     function handleConfigChange(evt: JSX.TargetedEvent<HTMLSelectElement>) {
@@ -187,6 +189,9 @@ export function Properties<FC>() {
         clearProject()
     }
 
+    function handleSaveProject() {
+        updateSaveModalVisible(true)
+    }
 
     return <div className="h-full overflow-y-auto flex flex-col pr-4">
         <button
@@ -207,6 +212,7 @@ export function Properties<FC>() {
         <div className="px-2 py-1 text-right">
             <button className="py-1 px-2 rounded border border-solid border-gray-500 hover:ring-2 ring-gray-300" onClick={handleClearProject}>清空</button>
             <button className="ml-2 py-1 px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={() => updatefeeVisible(true)}>计价</button>
+            <button className="ml-2 py-1 px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={handleSaveProject}>保存</button>
             <button className="ml-2 py-1 px-2 rounded bg-primary text-white hover:ring-2 ring-primary" onClick={handlePreview}>预览</button>
         </div>
         <Modal
@@ -231,5 +237,6 @@ export function Properties<FC>() {
         </Modal>
         <PreView open={showPreview} onClose={() => updateShowPreview(false)} />
         <Settlement visible={feeVisible} onClose={() => updatefeeVisible(false)} onOk={async () => updatefeeVisible(false)} />
+        <SaveProjectModal visible={saveModalVisible} onClose={() => updateSaveModalVisible(false)} />
     </div>
 }
