@@ -1,4 +1,4 @@
-import { readBinaryFile } from "@tauri-apps/api/fs";
+import { readBinaryFile, BaseDirectory, exists } from "@tauri-apps/api/fs";
 
 export function getPreDirFormPath(path: string) {
     const len = path.length;
@@ -64,5 +64,12 @@ export async function getImageSize(source: string): Promise<{ width: number; hei
             });
         }
         img.src = url;
+    })
+}
+
+export async function checkProjectExists(name: string): Promise<boolean> {
+    let projectPath = `projects/${name}`;
+    return exists(projectPath, {
+        dir: BaseDirectory.App
     })
 }

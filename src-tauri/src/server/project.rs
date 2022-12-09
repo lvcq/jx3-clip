@@ -346,3 +346,11 @@ pub fn clear_project_tmp_dir() {
         fs::create_dir(&temp_dir).unwrap();
     }
 }
+
+
+pub fn save_project(detail:ProjectDetail)->Result<(),String>{
+    let current = env::current_dir().unwrap();
+    let mut project_dir = current.clone();
+    project_dir.push(format!("projects/{}",&detail.name));
+    Ok(())
+}

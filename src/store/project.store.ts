@@ -292,8 +292,10 @@ export const centralVPaddingAtom = atom<number, number>(
             ...get(centralRegionAtom),
             vPadding: vp
         });
-    });
+    }
+);
 
+export const projectNameAtom = atom<string>("");
 
 export const clearProjectAtom = atom(null, (get, set) => {
     set(hairConfigAtom, {

@@ -27,3 +27,10 @@ pub struct FrameConfig {
     pub bottom: u32,
     pub left: u32,
 }
+
+
+#[derive(Debug,Serialize,Deserialize,Clone)]
+pub struct ProjectDetail{
+    pub name:String,
+    pub config: ProjectConfig,
+}
