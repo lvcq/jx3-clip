@@ -6,11 +6,11 @@ use image::{
 use image::{GenericImageView, ImageFormat};
 use std::thread;
 
-use super::project_config::{PartConfig, ProjectConfig};
+use super::project_config::{PartConfig, ProjectConfig, ProjectDetail};
 use crate::tools::image_tools::{image_clip, save_image};
 use std::env;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use threadpool::ThreadPool;
 /// 项目相关操作
@@ -347,10 +347,62 @@ pub fn clear_project_tmp_dir() {
     }
 }
 
+pub fn save_project(detail: ProjectDetail) -> Result<(), String> {
+    let project_dir = create_project_dir(&detail.name)?;
+    match write_project_detail_to_file(&project_dir, &detail){
+        Ok(_)=>Ok(()),
+        Err(err)=>{
+             // todo "保存失败删除项目文件"
+            Err(err)
+        }
+    }
+}
 
-pub fn save_project(detail:ProjectDetail)->Result<(),String>{
+/// 项目配置保存到 `{APP}/projects/{project_name}project.toml` 文件
+fn write_project_detail_to_file(project_dir:&PathBuf,detail:&ProjectDetail)->Result<(),String>{
+    let mut config_path = project_dir.clone();
+    config_path.push("project.toml");
+    save_config_file(&detail, config_path)?;
+    Ok(())
+}
+
+fn create_project_dir(name: &str) -> Result<PathBuf, String> {
     let current = env::current_dir().unwrap();
     let mut project_dir = current.clone();
-    project_dir.push(format!("projects/{}",&detail.name));
-    Ok(())
+    project_dir.push(format!("projects/{}", name));
+    if project_dir.exists() {
+        return Err("Project exists.".to_string());
+    }
+    match fs::create_dir_all(&project_dir) {
+        Ok(_) => Ok(project_dir),
+        Err(_) => Err("Create prject dir fail.".to_string()),
+    }
+}
+
+fn save_config_file(detail: &ProjectDetail, path: PathBuf) -> Result<(), String> {
+    let mut saved_detail = detail.clone();
+    if saved_detail.config.hair.is_some(){
+        let mut hair_ref = saved_detail.config.hair.as_mut().unwrap();
+        hair_ref.images=hair_ref.images.iter().map(|img_path|{
+            let tmp_path = Path::new(img_path);
+            let img_name = String::from(tmp_path.file_name().unwrap().to_str().unwrap());
+            return img_name;
+        }).collect();
+    }
+    if saved_detail.config.clothes.is_some(){
+        let mut clothes_ref = saved_detail.config.clothes.as_mut().unwrap();
+        clothes_ref.images=clothes_ref.images.iter().map(|img_path|{
+            let tmp_path = Path::new(img_path);
+            let img_name = String::from(tmp_path.file_name().unwrap().to_str().unwrap());
+            return img_name;
+        }).collect();
+    }
+    let config_str = match toml::to_string(&saved_detail) {
+        Ok(re) => re,
+        Err(_) => return Err("Stringify project detail to string fail.".to_string()),
+    };
+    match fs::write(path, config_str) {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Write to file fail.".to_string()),
+    }
 }

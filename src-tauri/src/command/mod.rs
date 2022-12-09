@@ -15,5 +15,5 @@ pub use frame_config_cmd::{
 };
 pub use project_cmd::{
     __cmd__clip_img_api, __cmd__create_preview_img_api, __cmd__export_project_image, clip_img_api,
-    create_preview_img_api, export_project_image,
+    create_preview_img_api, export_project_image,__cmd__save_project_api,save_project_api
 };

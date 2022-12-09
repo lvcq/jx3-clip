@@ -10,7 +10,7 @@ use jx3_clip::command::{
     __cmd__update_frame_config, clip_img_api, create_clip_config, create_frame_config,
     create_preview_img_api, delete_clip_config, delete_frame_config, export_project_image,
     get_all_clip_config, get_all_frame_config, get_clip_config_detail, get_frame_config_detail,
-    update_clip_config, update_frame_config,
+    update_clip_config, update_frame_config,__cmd__save_project_api,save_project_api
 };
 use jx3_clip::database;
 use jx3_clip::menu;
@@ -42,7 +42,8 @@ fn main() {
             update_frame_config,
             clip_img_api,
             create_preview_img_api,
-            export_project_image
+            export_project_image,
+            save_project_api
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

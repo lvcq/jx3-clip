@@ -6,7 +6,7 @@ extern crate image;
 extern crate sqlite;
 extern crate sha2;
 extern crate threadpool;
-// extern crate sqlite3builder;
+extern crate toml;
 
 //  mods
 pub mod command;
