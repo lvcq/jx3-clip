@@ -7,6 +7,8 @@ extern crate sqlite;
 extern crate sha2;
 extern crate threadpool;
 extern crate toml;
+extern crate zip_archive;
+extern crate zip;
 
 //  mods
 pub mod command;

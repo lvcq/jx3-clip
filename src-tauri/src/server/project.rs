@@ -5,8 +5,12 @@ use image::{
 };
 use image::{GenericImageView, ImageFormat};
 use std::thread;
+use zip::write::FileOptions;
+use zip::ZipWriter;
 
 use super::project_config::{PartConfig, ProjectConfig, ProjectDetail};
+use crate::menu::project;
+use crate::tools::datetime::now;
 use crate::tools::image_tools::{image_clip, save_image};
 use std::env;
 use std::fs;
@@ -349,20 +353,76 @@ pub fn clear_project_tmp_dir() {
 
 pub fn save_project(detail: ProjectDetail) -> Result<(), String> {
     let project_dir = create_project_dir(&detail.name)?;
-    match write_project_detail_to_file(&project_dir, &detail){
-        Ok(_)=>Ok(()),
-        Err(err)=>{
-             // todo "保存失败删除项目文件"
+    match write_project_detail_to_file(&project_dir, &detail) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            // todo "保存失败删除项目文件"
             Err(err)
         }
     }
 }
 
 /// 项目配置保存到 `{APP}/projects/{project_name}project.toml` 文件
-fn write_project_detail_to_file(project_dir:&PathBuf,detail:&ProjectDetail)->Result<(),String>{
+fn write_project_detail_to_file(
+    project_dir: &PathBuf,
+    detail: &ProjectDetail,
+) -> Result<(), String> {
     let mut config_path = project_dir.clone();
     config_path.push("project.toml");
     save_config_file(&detail, config_path)?;
+    copy_images_and_zip(&detail.config,project_dir)?;
+    Ok(())
+}
+
+fn copy_images_and_zip(config: &ProjectConfig, project_dir: &PathBuf) -> Result<(), String> {
+    let tmp_dir = create_project_images_tmp_dir()?;
+    copy_images_to_tmp_dir(config, &tmp_dir)?;
+    compress_tmp_dir(&tmp_dir, project_dir)?;
+    Ok(())
+}
+
+fn copy_images_to_tmp_dir(config: &ProjectConfig, tmp_dir: &PathBuf) -> Result<(), String> {
+    let n_workers: usize = 6;
+    let mut images: Vec<String> = Vec::new();
+    if config.hair.is_some() {
+        images.extend(config.hair.unwrap().images.iter());
+    }
+    if config.clothes.is_some() {
+        images.extend(config.clothes.unwrap().images.iter());
+    }
+    let pool = ThreadPool::new(n_workers);
+    let (sx, rx) = mpsc::channel::<()>();
+    for img_path in images {
+        let sxc = sx.clone();
+        let mut target = tmp_dir.clone();
+        let source = PathBuf::from(&img_path);
+        let file_name = source.file_name().unwrap();
+        target.push(file_name);
+        pool.execute(move || {
+            fs::copy(&source, &target).unwrap();
+            sxc.send(()).unwrap();
+        })
+    }
+    for _ in 0..images.len() {
+        rx.recv().unwrap();
+    }
+    Ok(())
+}
+
+fn compress_tmp_dir(tmp_dir: &PathBuf, project_dir: &PathBuf) -> Result<(), String> {
+    let mut target = project_dir.clone();
+    target.push("images.zip");
+    let zip_file = fs::File::create(&target).unwrap();
+    let mut zip = ZipWriter::new(zip_file);
+    let options =
+        zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Stored);
+    for entry in fs::read_dir(tmp_dir).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        let path_str = String::from(path.to_str().unwrap());
+        zip.start_file(path_str, &options).unwrap();
+    }
+    zip.finish().unwrap();
     Ok(())
 }
 
@@ -379,23 +439,44 @@ fn create_project_dir(name: &str) -> Result<PathBuf, String> {
     }
 }
 
+fn create_project_images_tmp_dir() -> Result<PathBuf, String> {
+    let current = env::current_dir().unwrap();
+    let mut images_tmp_dir = current.clone();
+    images_tmp_dir.push(format!("images_tmp/tmp_{}", now()));
+    if images_tmp_dir.exists() {
+        fs::remove_dir_all(images_tmp_dir).unwrap();
+    }
+    match fs::create_dir_all(&images_tmp_dir) {
+        OK(_) => Ok(images_tmp_dir),
+        Err(_) => Err("Create project image tmp dir fail.".to_string()),
+    }
+}
+
 fn save_config_file(detail: &ProjectDetail, path: PathBuf) -> Result<(), String> {
     let mut saved_detail = detail.clone();
-    if saved_detail.config.hair.is_some(){
+    if saved_detail.config.hair.is_some() {
         let mut hair_ref = saved_detail.config.hair.as_mut().unwrap();
-        hair_ref.images=hair_ref.images.iter().map(|img_path|{
-            let tmp_path = Path::new(img_path);
-            let img_name = String::from(tmp_path.file_name().unwrap().to_str().unwrap());
-            return img_name;
-        }).collect();
+        hair_ref.images = hair_ref
+            .images
+            .iter()
+            .map(|img_path| {
+                let tmp_path = Path::new(img_path);
+                let img_name = String::from(tmp_path.file_name().unwrap().to_str().unwrap());
+                return img_name;
+            })
+            .collect();
     }
-    if saved_detail.config.clothes.is_some(){
+    if saved_detail.config.clothes.is_some() {
         let mut clothes_ref = saved_detail.config.clothes.as_mut().unwrap();
-        clothes_ref.images=clothes_ref.images.iter().map(|img_path|{
-            let tmp_path = Path::new(img_path);
-            let img_name = String::from(tmp_path.file_name().unwrap().to_str().unwrap());
-            return img_name;
-        }).collect();
+        clothes_ref.images = clothes_ref
+            .images
+            .iter()
+            .map(|img_path| {
+                let tmp_path = Path::new(img_path);
+                let img_name = String::from(tmp_path.file_name().unwrap().to_str().unwrap());
+                return img_name;
+            })
+            .collect();
     }
     let config_str = match toml::to_string(&saved_detail) {
         Ok(re) => re,

@@ -235,7 +235,7 @@ export function Properties<FC>() {
                 </FormItem>
             </div>
         </Modal>
-        <PreView open={showPreview} onClose={() => updateShowPreview(false)} />
+        {showPreview ?<PreView open={showPreview} onClose={() => updateShowPreview(false)} />:null}
         <Settlement visible={feeVisible} onClose={() => updatefeeVisible(false)} onOk={async () => updatefeeVisible(false)} />
         <SaveProjectModal visible={saveModalVisible} onClose={() => updateSaveModalVisible(false)} />
     </div>

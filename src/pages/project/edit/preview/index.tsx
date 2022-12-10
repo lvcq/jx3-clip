@@ -41,6 +41,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     const [imageSize, updateImageSize] = useState({ width: 0, height: 0 });
     const [wrapperStyle, updateWrapperStyle] = useState<string | JSX.CSSProperties | JSX.SignalLike<string | JSX.CSSProperties>>({});
     const [creating, updateCreating] = useState(false);
+    const createKeyRef = useRef("");
 
     const [exportFormat, updateExportFormat] = useState({
         key: "png",
@@ -54,6 +55,8 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
             updateCreating(true);
             setTimeout(async () => {
                 if (open) {
+                    let key = window.crypto.randomUUID();;
+                    createKeyRef.current = key;
                     let config: ProjectConfig = {};
                     if (hairConfig.images.length) {
                         const { images, width, height, cols, colgap, rowgap, frame } = hairConfig;
@@ -96,6 +99,9 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                         }
                     }
                     const preview_path = await create_preview_api(config);
+                    if (createKeyRef.current !== key) {
+                        return;
+                    }
                     if (preview_path) {
                         let url = await loadLocalImage(preview_path);
                         let size = await getImageSize(preview_path);
@@ -107,7 +113,10 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                 }
             }, 300)
         } else {
-
+            updateIsSaving(false);
+            updateCreating(false);
+            updatePreviewUrl("");
+            updatePreviewSourcePath("");
         }
     }, [open, hairConfig, clothesConfig])
 
