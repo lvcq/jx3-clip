@@ -46,6 +46,10 @@ export interface ProjectConfig {
     hair?: PartConfig;
     clothes?: PartConfig;
 }
+export interface ProjectDetail{
+    name:string
+    config: ProjectConfig
+}
 
 export async function create_preview_api(config:ProjectConfig){
     try{
@@ -66,6 +70,17 @@ export async function export_image(source:string,target:string,format:string){
             format
          })
     }catch (err){
+        console.log(err);
+        throw err;
+    }
+}
+
+export async function  save_project_api(detail:ProjectDetail) {
+    try{
+        await invoke("save_project_api",{
+            detail
+        })
+    }catch(err){
         console.log(err);
         throw err;
     }
