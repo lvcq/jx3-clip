@@ -34,3 +34,9 @@ pub struct ProjectDetail{
     pub name:String,
     pub config: ProjectConfig,
 }
+
+#[derive(Debug,Serialize,Deserialize,Clone)]
+pub struct ProjectBrief{
+    pub name:String,
+    pub path:String,
+}

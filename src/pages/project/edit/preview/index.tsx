@@ -163,8 +163,8 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     type: "success",
                     message: "保存图片成功"
                 });
-                updateIsSaving(false);
             }
+            updateIsSaving(false);
         } catch {
             updateGlobalMessage({
                 type: "error",

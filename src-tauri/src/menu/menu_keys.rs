@@ -34,4 +34,10 @@ macro_rules! menu_keys {
     }
 }
 
-menu_keys!(ClipConfig, FrameConfig, CreateNewProject,ClearProjectTmp);
+menu_keys!(
+    ClipConfig,
+    FrameConfig,
+    CreateNewProject,
+    ClearProjectTmp,
+    OpenProject
+);

@@ -5,11 +5,9 @@ use image::{
 };
 use image::{GenericImageView, ImageFormat};
 use std::thread;
-use zip::write::FileOptions;
 use zip::ZipWriter;
 
-use super::project_config::{PartConfig, ProjectConfig, ProjectDetail};
-use crate::menu::project;
+use super::project_config::{PartConfig, ProjectConfig, ProjectDetail, ProjectBrief};
 use crate::tools::datetime::now;
 use crate::tools::image_tools::{image_clip, save_image};
 use std::env;
@@ -370,7 +368,7 @@ fn write_project_detail_to_file(
     let mut config_path = project_dir.clone();
     config_path.push("project.toml");
     save_config_file(&detail, config_path)?;
-    copy_images_and_zip(&detail.config,project_dir)?;
+    copy_images_and_zip(&detail.config, project_dir)?;
     Ok(())
 }
 
@@ -385,11 +383,28 @@ fn copy_images_to_tmp_dir(config: &ProjectConfig, tmp_dir: &PathBuf) -> Result<(
     let n_workers: usize = 6;
     let mut images: Vec<String> = Vec::new();
     if config.hair.is_some() {
-        images.extend(config.hair.unwrap().images.iter());
+        let hair_images: Vec<String> = config
+            .hair
+            .as_ref()
+            .unwrap()
+            .images
+            .iter()
+            .map(|st| st.clone())
+            .collect();
+        images.extend(hair_images);
     }
     if config.clothes.is_some() {
-        images.extend(config.clothes.unwrap().images.iter());
+        let clothes_images: Vec<String> = config
+            .clothes
+            .as_ref()
+            .unwrap()
+            .images
+            .iter()
+            .map(|st| st.clone())
+            .collect();
+        images.extend(clothes_images);
     }
+    let count = images.len();
     let pool = ThreadPool::new(n_workers);
     let (sx, rx) = mpsc::channel::<()>();
     for img_path in images {
@@ -403,7 +418,7 @@ fn copy_images_to_tmp_dir(config: &ProjectConfig, tmp_dir: &PathBuf) -> Result<(
             sxc.send(()).unwrap();
         })
     }
-    for _ in 0..images.len() {
+    for _ in 0..count {
         rx.recv().unwrap();
     }
     Ok(())
@@ -420,7 +435,7 @@ fn compress_tmp_dir(tmp_dir: &PathBuf, project_dir: &PathBuf) -> Result<(), Stri
         let entry = entry.unwrap();
         let path = entry.path();
         let path_str = String::from(path.to_str().unwrap());
-        zip.start_file(path_str, &options).unwrap();
+        zip.start_file(path_str, options.clone()).unwrap();
     }
     zip.finish().unwrap();
     Ok(())
@@ -444,10 +459,10 @@ fn create_project_images_tmp_dir() -> Result<PathBuf, String> {
     let mut images_tmp_dir = current.clone();
     images_tmp_dir.push(format!("images_tmp/tmp_{}", now()));
     if images_tmp_dir.exists() {
-        fs::remove_dir_all(images_tmp_dir).unwrap();
+        fs::remove_dir_all(&images_tmp_dir).unwrap();
     }
     match fs::create_dir_all(&images_tmp_dir) {
-        OK(_) => Ok(images_tmp_dir),
+        Ok(_) => Ok(images_tmp_dir),
         Err(_) => Err("Create project image tmp dir fail.".to_string()),
     }
 }
@@ -486,4 +501,30 @@ fn save_config_file(detail: &ProjectDetail, path: PathBuf) -> Result<(), String>
         Ok(_) => Ok(()),
         Err(_) => Err("Write to file fail.".to_string()),
     }
+}
+
+
+pub fn get_all_projects()->Result<Vec<ProjectBrief>,String>{
+    let current = env::current_dir().unwrap();
+    let mut projects_dir= current.clone();
+    projects_dir.push("projects");
+    let mut result:Vec<ProjectBrief>=Vec::new();
+    if projects_dir.exists()&&projects_dir.is_dir(){
+        for entry in projects_dir.read_dir().unwrap(){
+            let entry = entry.unwrap();
+            let sub_path = entry.path();
+            if sub_path.is_dir(){
+                let mut config_file_path = sub_path.clone();
+                config_file_path.push("project.toml");
+                if config_file_path.exists(){
+                    let project_name = sub_path.iter().last().unwrap();
+                    result.push(ProjectBrief {
+                        name: String::from(project_name.to_string_lossy()),
+                        path:String::from (sub_path.to_string_lossy())
+                    })
+                }
+            }
+        }
+    }
+    Ok(result)
 }
