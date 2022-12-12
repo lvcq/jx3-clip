@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::{env, fs};
+use std::{env, fs, io};
 
 use super::datetime;
 
@@ -25,6 +25,55 @@ pub fn copy_file(target_dir: &str, source: &str) -> Result<PathBuf, String> {
 
     fs::copy(source_path, &target).expect("Copy fail.");
     Ok(target)
+}
+
+pub fn unzip_file_to_directory(source: &PathBuf, desc: PathBuf) -> Result<(), String> {
+    let zip_file = fs::OpenOptions::new().read(true).open(source).unwrap();
+    let mut archive = zip::ZipArchive::new(&zip_file).unwrap();
+    for index in 0..archive.len() {
+        let mut file = archive.by_index(index).unwrap();
+        let sub_path = match file.enclosed_name() {
+            Some(path) => path.to_owned(),
+            None => continue,
+        };
+        let mut outpath = desc.clone();
+        outpath.push(sub_path.as_os_str());
+
+        {
+            let comment = file.comment();
+            if !comment.is_empty() {
+                println!("File {} comment: {}", index, comment);
+            }
+        }
+
+        if (*file.name()).ends_with('/') {
+            println!("File {} extracted to \"{}\"", index, outpath.display());
+            fs::create_dir_all(&outpath).unwrap();
+        } else {
+            println!(
+                "File {} extracted to \"{}\" ({} bytes)",
+                index,
+                outpath.display(),
+                file.size()
+            );
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(p).unwrap();
+                }
+            }
+            let mut outfile = fs::File::create(&outpath).unwrap();
+            io::copy(&mut file, &mut outfile).unwrap();
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            if let Some(mode) = file.unix_mode() {
+                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode)).unwrap();
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

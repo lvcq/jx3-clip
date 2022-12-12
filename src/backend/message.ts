@@ -2,10 +2,11 @@ import { appWindow } from "@tauri-apps/api/window";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { filter, Subject } from "rxjs";
 import { start_listen_menu_message } from "./menu.message";
-import { PayloadMessage } from "./model";
+import { GlobalMessage, GlobalMessageTypes, PayloadMessage } from "./model";
 
 const eventObser = new Subject<PayloadMessage>();
 let unlisten: Promise<UnlistenFn> | null = null;
+const globalMessage = new Subject<GlobalMessage>();
 
 export function listen_backend_message() {
     unlisten = appWindow.listen<PayloadMessage>("backMessage", (event) => {
@@ -23,4 +24,13 @@ export async function stop_backend_listen() {
 
     }
 
-} 
+}
+
+export function sendGlobalMessage(type: GlobalMessageTypes, payload?: any) {
+    globalMessage.next({
+        type,
+        payload
+    })
+}
+
+export const globalMessage$ = globalMessage.asObservable();

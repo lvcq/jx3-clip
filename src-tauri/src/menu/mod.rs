@@ -25,7 +25,7 @@ pub fn create_menu() -> Menu {
 pub fn menu_handler(event: WindowMenuEvent) {
     let window = event.window();
     match event.menu_item_id().parse::<MenuKeys>().unwrap() {
-        MenuKeys::ClipConfig | MenuKeys::CreateNewProject|MenuKeys::FrameConfig => {
+        MenuKeys::ClipConfig | MenuKeys::CreateNewProject|MenuKeys::FrameConfig|MenuKeys::OpenProject => {
             window
                 .emit::<MenuMessage>(
                     "backMessage",

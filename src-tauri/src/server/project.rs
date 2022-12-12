@@ -7,8 +7,9 @@ use image::{GenericImageView, ImageFormat};
 use std::thread;
 use zip::ZipWriter;
 
-use super::project_config::{PartConfig, ProjectConfig, ProjectDetail, ProjectBrief};
+use super::project_config::{PartConfig, ProjectBrief, ProjectConfig, ProjectDetail};
 use crate::tools::datetime::now;
+use crate::tools::file_opts::unzip_file_to_directory;
 use crate::tools::image_tools::{image_clip, save_image};
 use std::env;
 use std::fs;
@@ -503,28 +504,91 @@ fn save_config_file(detail: &ProjectDetail, path: PathBuf) -> Result<(), String>
     }
 }
 
-
-pub fn get_all_projects()->Result<Vec<ProjectBrief>,String>{
+pub fn get_all_projects() -> Result<Vec<ProjectBrief>, String> {
     let current = env::current_dir().unwrap();
-    let mut projects_dir= current.clone();
+    let mut projects_dir = current.clone();
     projects_dir.push("projects");
-    let mut result:Vec<ProjectBrief>=Vec::new();
-    if projects_dir.exists()&&projects_dir.is_dir(){
-        for entry in projects_dir.read_dir().unwrap(){
+    let mut result: Vec<ProjectBrief> = Vec::new();
+    if projects_dir.exists() && projects_dir.is_dir() {
+        for entry in projects_dir.read_dir().unwrap() {
             let entry = entry.unwrap();
             let sub_path = entry.path();
-            if sub_path.is_dir(){
+            println!("sub_path: {:?}", sub_path.as_os_str());
+            if sub_path.is_dir() {
                 let mut config_file_path = sub_path.clone();
                 config_file_path.push("project.toml");
-                if config_file_path.exists(){
+                println!("config_file_path:{:?}", config_file_path.exists());
+                if config_file_path.exists() {
                     let project_name = sub_path.iter().last().unwrap();
                     result.push(ProjectBrief {
                         name: String::from(project_name.to_string_lossy()),
-                        path:String::from (sub_path.to_string_lossy())
+                        path: String::from(sub_path.to_string_lossy()),
                     })
                 }
             }
         }
     }
+    println!("count:{}", result.len());
     Ok(result)
+}
+
+pub fn load_project(dir_path: String) -> Result<ProjectConfig, String> {
+    let project_path = PathBuf::from(&dir_path);
+    if project_path.exists() && project_path.is_dir() {
+        unzip_files_to_tmp(&project_path)?;
+        read_project_config_file(&project_path)
+    } else {
+        return Err("Projet directory not exists.".to_string());
+    }
+}
+
+fn unzip_files_to_tmp(project_path: &PathBuf) -> Result<(), String> {
+    let tmp_dir=get_tmp_dir();
+    let mut img_zip_path = project_path.clone();
+    img_zip_path.push("images.zip");
+    unzip_file_to_directory(&img_zip_path, tmp_dir)?;
+    Ok(())
+}
+
+fn read_project_config_file(project_path: &PathBuf) -> Result<ProjectConfig, String> {
+    let mut config_file_path = project_path.clone();
+    config_file_path.push("project.toml");
+    let config_str = fs::read_to_string(&config_file_path).unwrap();
+    let tmp_dir = get_tmp_dir();
+    if let Ok(detail) = toml::from_str::<ProjectDetail>(&config_str) {
+        let mut copied_config = detail.config;
+        if copied_config.hair.is_some() {
+            let mut hair_ref = copied_config.hair.as_mut().unwrap();
+            hair_ref.images = hair_ref
+                .images
+                .iter()
+                .map(|img_name| {
+                    let mut img_path = tmp_dir.clone();
+                    img_path.push(img_name);
+                    return String::from(img_path.to_string_lossy());
+                })
+                .collect();
+        }
+        if copied_config.clothes.is_some() {
+            let mut clothes_ref = copied_config.clothes.as_mut().unwrap();
+            clothes_ref.images = clothes_ref
+                .images
+                .iter()
+                .map(|img_name| {
+                    let mut img_path = tmp_dir.clone();
+                    img_path.push(img_name);
+                    return String::from(img_path.to_string_lossy());
+                })
+                .collect();
+        }
+        Ok(copied_config)
+    } else {
+        Err("Load config file error".to_string())
+    }
+}
+
+fn get_tmp_dir() -> PathBuf {
+    let mut tmp_dir = env::current_dir().unwrap();
+    tmp_dir.push("images_tmp");
+    tmp_dir
 }

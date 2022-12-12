@@ -33,3 +33,8 @@ pub fn save_project_api(detail:ProjectDetail)->Result<(),String>{
 pub fn get_all_projects_api()->Result<Vec<ProjectBrief>,String>{
     project::get_all_projects()
 }
+
+#[tauri::command]
+pub fn load_project_api(path:String)->Result<ProjectConfig,String>{
+    project::load_project(path)
+}

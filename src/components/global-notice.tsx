@@ -3,7 +3,7 @@ import { useAtom } from "jotai"
 import { useEffect, useRef } from "preact/hooks";
 
 
-export function GlobalMessage<FC>() {
+export function GlobalNotice<FC>() {
     const [message] = useAtom(messageAtom);
     const [type] = useAtom(messageTypeAtom);
     const [visable, updateVisable] = useAtom(visibleAtom);

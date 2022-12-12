@@ -1,5 +1,6 @@
 import { ClipConfig } from "@backend/apis/clip_config";
 import { FrameConfig } from "@backend/apis/frame_config";
+import { load_project_api } from "@backend/apis/project_apis";
 import { Part } from "@data/part";
 import { atom } from "jotai";
 
@@ -325,3 +326,15 @@ export const clearProjectAtom = atom(null, (get, set) => {
         vPadding: 0
     })
 });
+
+export const loadProjectAtom = atom<null, string>(
+    null,
+    async (get, set, path) => {
+        try {
+            let config = await load_project_api(path);
+            console.log(config);
+        } catch (err) {
+
+        }
+    }
+)

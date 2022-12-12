@@ -46,41 +46,66 @@ export interface ProjectConfig {
     hair?: PartConfig;
     clothes?: PartConfig;
 }
-export interface ProjectDetail{
-    name:string
+export interface ProjectDetail {
+    name: string
     config: ProjectConfig
 }
 
-export async function create_preview_api(config:ProjectConfig){
-    try{
-        return await invoke<string>("create_preview_img_api",{
+export interface ProjectBrief {
+    name: string
+    path: string
+}
+
+export async function create_preview_api(config: ProjectConfig) {
+    try {
+        return await invoke<string>("create_preview_img_api", {
             config
         });
-    }catch (err){
+    } catch (err) {
         console.log(err);
         throw err;
     }
 }
 
-export async function export_image(source:string,target:string,format:string){
-    try{
-         await invoke("export_project_image",{
+export async function export_image(source: string, target: string, format: string) {
+    try {
+        await invoke("export_project_image", {
             source,
             target,
             format
-         })
-    }catch (err){
+        })
+    } catch (err) {
         console.log(err);
         throw err;
     }
 }
 
-export async function  save_project_api(detail:ProjectDetail) {
-    try{
-        await invoke("save_project_api",{
+export async function save_project_api(detail: ProjectDetail) {
+    try {
+        await invoke("save_project_api", {
             detail
         })
-    }catch(err){
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+export async function get_all_project_api(): Promise<Array<ProjectBrief>> {
+    try {
+        let list = await invoke<ProjectBrief[]>("get_all_projects_api");
+        return list;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+export async function load_project_api(path:string):Promise<ProjectConfig>{
+    try {
+        let config = await invoke<ProjectConfig>("load_project_api",{path});
+        return config;
+    } catch (err) {
         console.log(err);
         throw err;
     }
