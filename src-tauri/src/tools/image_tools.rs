@@ -1,8 +1,8 @@
-use std::path::PathBuf;
-use std::{env, fs};
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView, ImageBuffer, ImageError, ImageFormat};
 use sha2::{Digest, Sha256};
+use std::path::PathBuf;
+use std::{env, fs};
 
 pub fn image_clip(
     source: &str,
@@ -10,7 +10,7 @@ pub fn image_clip(
     right: u32,
     bottom: u32,
     left: u32,
-    radius: u32,
+    _radius: u32,
 ) -> Result<DynamicImage, ImageError> {
     let source_img = ImageReader::open(&source)?.decode()?;
     let width = right - left;

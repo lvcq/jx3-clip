@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
+use zip_archive::Archiver;
+
 use super::datetime;
 
 /// 复制文件到目标文件夹，传入目标文件为相对于当前项目目录的相对路径
@@ -37,7 +39,7 @@ pub fn unzip_file_to_directory(source: &PathBuf, desc: PathBuf) -> Result<(), St
             None => continue,
         };
         let mut outpath = desc.clone();
-        outpath.push(sub_path.as_os_str());
+        outpath.push(sub_path.file_name().unwrap());
 
         {
             let comment = file.comment();
@@ -74,6 +76,22 @@ pub fn unzip_file_to_directory(source: &PathBuf, desc: PathBuf) -> Result<(), St
         }
     }
     Ok(())
+}
+
+pub fn zip_dir(source_dir: &PathBuf, dest_dir: &PathBuf) -> Result<(), String> {
+    let origin = source_dir.clone();
+    let dest = dest_dir.clone();
+    let thread_count = 4;
+
+    let mut archiver = Archiver::new();
+    archiver.push(origin);
+    archiver.set_destination(dest);
+    archiver.set_thread_count(thread_count);
+
+    match archiver.archive() {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Cannot archive the directory!".to_string()),
+    }
 }
 
 #[cfg(test)]

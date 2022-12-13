@@ -5,11 +5,10 @@ use image::{
 };
 use image::{GenericImageView, ImageFormat};
 use std::thread;
-use zip::ZipWriter;
 
 use super::project_config::{PartConfig, ProjectBrief, ProjectConfig, ProjectDetail};
 use crate::tools::datetime::now;
-use crate::tools::file_opts::unzip_file_to_directory;
+use crate::tools::file_opts::{unzip_file_to_directory, zip_dir};
 use crate::tools::image_tools::{image_clip, save_image};
 use std::env;
 use std::fs;
@@ -350,32 +349,48 @@ pub fn clear_project_tmp_dir() {
     }
 }
 
-pub fn save_project(detail: ProjectDetail) -> Result<(), String> {
-    let project_dir = create_project_dir(&detail.name)?;
-    match write_project_detail_to_file(&project_dir, &detail) {
-        Ok(_) => Ok(()),
+pub fn save_project(detail: ProjectDetail, cover: bool) -> Result<(), String> {
+    let project_dir = create_project_dir(&detail.name, cover)?;
+    let tmp_dir = create_project_images_tmp_dir()?;
+    match write_project_detail_to_file(&project_dir, &tmp_dir, &detail) {
+        Ok(_) => {
+            remove_dir(tmp_dir.parent().unwrap());
+            Ok(())
+        }
         Err(err) => {
             // todo "保存失败删除项目文件"
+            remove_dir(project_dir.as_path());
+            remove_dir(tmp_dir.parent().unwrap());
             Err(err)
         }
+    }
+}
+
+pub fn remove_dir(dir_path: &Path) {
+    if dir_path.exists() && dir_path.is_dir() {
+        fs::remove_dir_all(dir_path).unwrap();
     }
 }
 
 /// 项目配置保存到 `{APP}/projects/{project_name}project.toml` 文件
 fn write_project_detail_to_file(
     project_dir: &PathBuf,
+    tmp_dir: &PathBuf,
     detail: &ProjectDetail,
 ) -> Result<(), String> {
     let mut config_path = project_dir.clone();
     config_path.push("project.toml");
     save_config_file(&detail, config_path)?;
-    copy_images_and_zip(&detail.config, project_dir)?;
+    copy_images_and_zip(&detail.config, project_dir, &tmp_dir)?;
     Ok(())
 }
 
-fn copy_images_and_zip(config: &ProjectConfig, project_dir: &PathBuf) -> Result<(), String> {
-    let tmp_dir = create_project_images_tmp_dir()?;
-    copy_images_to_tmp_dir(config, &tmp_dir)?;
+fn copy_images_and_zip(
+    config: &ProjectConfig,
+    project_dir: &PathBuf,
+    tmp_dir: &PathBuf,
+) -> Result<(), String> {
+    copy_images_to_tmp_dir(config, tmp_dir)?;
     compress_tmp_dir(&tmp_dir, project_dir)?;
     Ok(())
 }
@@ -426,28 +441,22 @@ fn copy_images_to_tmp_dir(config: &ProjectConfig, tmp_dir: &PathBuf) -> Result<(
 }
 
 fn compress_tmp_dir(tmp_dir: &PathBuf, project_dir: &PathBuf) -> Result<(), String> {
-    let mut target = project_dir.clone();
-    target.push("images.zip");
-    let zip_file = fs::File::create(&target).unwrap();
-    let mut zip = ZipWriter::new(zip_file);
-    let options =
-        zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Stored);
-    for entry in fs::read_dir(tmp_dir).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        let path_str = String::from(path.to_str().unwrap());
-        zip.start_file(path_str, options.clone()).unwrap();
-    }
-    zip.finish().unwrap();
+    let target = project_dir.clone();
+    // target.push("images.zip");
+    zip_dir(tmp_dir, &target)?;
     Ok(())
 }
 
-fn create_project_dir(name: &str) -> Result<PathBuf, String> {
+fn create_project_dir(name: &str, cover: bool) -> Result<PathBuf, String> {
     let current = env::current_dir().unwrap();
     let mut project_dir = current.clone();
     project_dir.push(format!("projects/{}", name));
     if project_dir.exists() {
-        return Err("Project exists.".to_string());
+        if cover {
+            remove_dir(project_dir.as_path());
+        } else {
+            return Err("Project exists.".to_string());
+        }
     }
     match fs::create_dir_all(&project_dir) {
         Ok(_) => Ok(project_dir),
@@ -458,7 +467,7 @@ fn create_project_dir(name: &str) -> Result<PathBuf, String> {
 fn create_project_images_tmp_dir() -> Result<PathBuf, String> {
     let current = env::current_dir().unwrap();
     let mut images_tmp_dir = current.clone();
-    images_tmp_dir.push(format!("images_tmp/tmp_{}", now()));
+    images_tmp_dir.push(format!("images_tmp/tmp_{}/images", now()));
     if images_tmp_dir.exists() {
         fs::remove_dir_all(&images_tmp_dir).unwrap();
     }
@@ -513,11 +522,9 @@ pub fn get_all_projects() -> Result<Vec<ProjectBrief>, String> {
         for entry in projects_dir.read_dir().unwrap() {
             let entry = entry.unwrap();
             let sub_path = entry.path();
-            println!("sub_path: {:?}", sub_path.as_os_str());
             if sub_path.is_dir() {
                 let mut config_file_path = sub_path.clone();
                 config_file_path.push("project.toml");
-                println!("config_file_path:{:?}", config_file_path.exists());
                 if config_file_path.exists() {
                     let project_name = sub_path.iter().last().unwrap();
                     result.push(ProjectBrief {
@@ -528,7 +535,6 @@ pub fn get_all_projects() -> Result<Vec<ProjectBrief>, String> {
             }
         }
     }
-    println!("count:{}", result.len());
     Ok(result)
 }
 
@@ -543,7 +549,7 @@ pub fn load_project(dir_path: String) -> Result<ProjectConfig, String> {
 }
 
 fn unzip_files_to_tmp(project_path: &PathBuf) -> Result<(), String> {
-    let tmp_dir=get_tmp_dir();
+    let tmp_dir = get_tmp_dir();
     let mut img_zip_path = project_path.clone();
     img_zip_path.push("images.zip");
     unzip_file_to_directory(&img_zip_path, tmp_dir)?;

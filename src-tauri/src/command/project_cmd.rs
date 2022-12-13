@@ -1,4 +1,7 @@
-use crate::server::{project, project_config::{ProjectConfig, ProjectDetail, ProjectBrief}};
+use crate::server::{
+    project,
+    project_config::{ProjectBrief, ProjectConfig, ProjectDetail},
+};
 
 #[tauri::command]
 pub fn clip_img_api(
@@ -25,16 +28,16 @@ pub fn export_project_image(source: String, target: String, format: String) -> R
 }
 
 #[tauri::command]
-pub fn save_project_api(detail:ProjectDetail)->Result<(),String>{
-    project::save_project(detail)
+pub fn save_project_api(detail: ProjectDetail, cover: bool) -> Result<(), String> {
+    project::save_project(detail, cover)
 }
 
 #[tauri::command]
-pub fn get_all_projects_api()->Result<Vec<ProjectBrief>,String>{
+pub fn get_all_projects_api() -> Result<Vec<ProjectBrief>, String> {
     project::get_all_projects()
 }
 
 #[tauri::command]
-pub fn load_project_api(path:String)->Result<ProjectConfig,String>{
+pub fn load_project_api(path: String) -> Result<ProjectConfig, String> {
     project::load_project(path)
 }

@@ -229,7 +229,7 @@ impl ClipConfig {
                 serde_json::to_string(&thumbnail).unwrap()
             ));
         }
-        if update_list.len()==0{
+        if update_list.len() == 0 {
             return Ok(true);
         }
         let stmt = format!(
@@ -245,7 +245,7 @@ impl ClipConfig {
                     std::fs::remove_file(&origin_path).expect("Delete origin fail.");
                 }
                 Ok(true)
-            },
+            }
             Err(_) => Err("Update fail.".to_string()),
         }
     }

@@ -16,6 +16,7 @@ use jx3_clip::command::{
 };
 use jx3_clip::database;
 use jx3_clip::menu;
+use jx3_clip::server::project;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -26,6 +27,7 @@ fn greet(name: &str) -> String {
 fn main() {
     env_logger::init();
     database::initialize_database().expect("Initialize database fail.");
+    project::clear_project_tmp_dir();
 
     tauri::Builder::default()
         .menu(menu::create_menu())

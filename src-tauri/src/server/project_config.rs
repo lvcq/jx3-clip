@@ -3,17 +3,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ProjectConfig {
     pub hair: Option<PartConfig>,
-    pub clothes: Option<PartConfig>
+    pub clothes: Option<PartConfig>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PartConfig {
     pub images: Vec<String>,
-    pub width:u32,
-    pub height:u32,
-    pub colgap:u32,
-    pub rowgap:u32,
-    pub cols:u32,
+    pub width: u32,
+    pub height: u32,
+    pub colgap: u32,
+    pub rowgap: u32,
+    pub cols: u32,
     pub frame_config: Option<FrameConfig>,
 }
 
@@ -28,15 +28,14 @@ pub struct FrameConfig {
     pub left: u32,
 }
 
-
-#[derive(Debug,Serialize,Deserialize,Clone)]
-pub struct ProjectDetail{
-    pub name:String,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProjectDetail {
+    pub name: String,
     pub config: ProjectConfig,
 }
 
-#[derive(Debug,Serialize,Deserialize,Clone)]
-pub struct ProjectBrief{
-    pub name:String,
-    pub path:String,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProjectBrief {
+    pub name: String,
+    pub path: String,
 }
