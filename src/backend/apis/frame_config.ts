@@ -1,19 +1,8 @@
 
+import { FrameConfig, WithRequired } from "@backend/model";
 import { invoke } from "@tauri-apps/api";
 
-export interface FrameConfig {
-    id?: number;
-    name: string;
-    top: number;
-    left: number;
-    right: number;
-    bottom: number;
-    width?: number;
-    height?: number;
-    source: string;
-    create_at?: number;
-}
-type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>
+
 
 /**
  * 新建边框

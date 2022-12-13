@@ -1,4 +1,5 @@
-import { get_all_project_api, ProjectBrief } from "@backend/apis/project_apis";
+import { get_all_project_api } from "@backend/apis/project_apis";
+import { ProjectBrief } from "@backend/model";
 import { globalNoticeAtom } from "@store/message.store";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { useSetAtom } from "jotai";
@@ -52,7 +53,10 @@ export function OpenProjectModal({ visible, onClose }: OpenProjectModalProps) {
         } else {
             isOpenInNewWindow = await openConfirm;
         }
-        let project_path = `/project/edit?ProjectPath=${path}`
+        if (onClose) {
+            onClose();
+        }
+        let project_path = `/project/edit?projectPath=${path}`
         if (isOpenInNewWindow) {
             const webWindow = new WebviewWindow(`create-new-project-${Math.random().toString(36).substring(2)}`, {
                 url: project_path,
@@ -74,15 +78,18 @@ export function OpenProjectModal({ visible, onClose }: OpenProjectModalProps) {
         }
     }
     return <Modal visible={visible} onClose={onClose} onOk={handleProjectSelect}>
-        <ul className="mb-1 last-of-type:mb-0 py-2 px-4 cursor-pointer hover:bg-blue-50" style={{ width: "600px" }}>
+        <div style={{ width: "800px", height: "600px", overflowY: "auto" }}>
+        <ul>
             {
                 projectList.map(item => {
-                    return <li key={item.path} className={`break-all whitespace-normal ${activePath === item.path ? 'bg-blue-500 text-white' : ''}`} onClick={() => handleProjectClick(item.path)}>
+                    return <li key={item.path} className={`break-all whitespace-normal cursor-pointer mb-1 last-of-type:mb-0 py-2 px-4 hover:bg-blue-50 ${activePath === item.path ? 'bg-blue-500 text-white' : ''}`} onClick={() => handleProjectClick(item.path)}>
                         <h3>{item.name}</h3>
                         <span className="text-gray-300">{item.path}</span>
                     </li>
                 })
             }
         </ul>
+        {projectList.length === 0 ? <div className="text-gay-300 text-center">暂无数据</div> : null}
+        </div>
     </Modal>
 }

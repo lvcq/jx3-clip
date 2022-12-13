@@ -1,10 +1,11 @@
-import { ProjectConfig, save_project_api } from "@backend/apis/project_apis"
+import { save_project_api } from "@backend/apis/project_apis"
+import { ProjectConfig } from "@backend/model"
 import { FormItem } from "@components/form-item"
 import { Modal } from "@components/global-modal"
 import { globalNoticeAtom } from "@store/message.store"
 import { clothesConfigAtom, hairConfigAtom, projectNameAtom } from "@store/project.store"
 import { checkProjectExists } from "@utils/fileopt"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { TargetedEvent } from "preact/compat"
 
 interface SaveProjectModalProps {
@@ -14,7 +15,7 @@ interface SaveProjectModalProps {
 export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps) {
 
     const [projectName, updateProjectName] = useAtom(projectNameAtom);
-    const [, updateGlobalMessage] = useAtom(globalNoticeAtom);
+    const updateGlobalNotice = useSetAtom(globalNoticeAtom);
     const [hairConfig] = useAtom(hairConfigAtom);
     const [clothesConfig] = useAtom(clothesConfigAtom);
 
@@ -25,9 +26,17 @@ export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps
                 return;
             }
             let isExists = await checkProjectExists(projectName);
+            let cover = false;
             if (isExists) {
-                alert("项目名已存在");
-                return;
+                let openConfirm = window.confirm(`项目《${projectName}》已存在，是否继续保存？`);
+                if (typeof openConfirm === "boolean") {
+                    cover = openConfirm;
+                } else {
+                    cover = await openConfirm;
+                }
+                if (!cover) {
+                    return;
+                }
             }
             let config: ProjectConfig = {};
             if (hairConfig.images.length) {
@@ -41,8 +50,9 @@ export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps
                     rowgap,
                 };
                 if (frame) {
-                    let { source, width, height, top, right, bottom, left } = frame;
+                    let { source, width, height, top, right, bottom, left, name } = frame;
                     config.hair.frame_config = {
+                        name,
                         source,
                         width: width!,
                         height: height!,
@@ -61,8 +71,9 @@ export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps
                     rowgap,
                 };
                 if (frame) {
-                    let { source, width, height, top, right, bottom, left } = frame;
+                    let { source, width, height, top, right, bottom, left, name } = frame;
                     config.clothes.frame_config = {
+                        name,
                         source,
                         width: width!,
                         height: height!,
@@ -73,13 +84,16 @@ export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps
             await save_project_api({
                 name: projectName,
                 config
-            });
-            updateGlobalMessage({
+            },cover);
+            updateGlobalNotice({
                 type: "success",
                 message: "项目保存成功"
             });
+            if (onClose) {
+                onClose()
+            }
         } catch (err: any) {
-            updateGlobalMessage({
+            updateGlobalNotice({
                 type: "error",
                 message: err.message || "项目保存失败"
             })

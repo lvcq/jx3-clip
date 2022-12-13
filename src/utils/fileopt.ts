@@ -69,7 +69,5 @@ export async function getImageSize(source: string): Promise<{ width: number; hei
 
 export async function checkProjectExists(name: string): Promise<boolean> {
     let projectPath = `projects/${name}`;
-    return exists(projectPath, {
-        dir: BaseDirectory.App
-    })
+    return exists(projectPath)
 }

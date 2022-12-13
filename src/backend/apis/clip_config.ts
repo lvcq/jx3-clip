@@ -1,22 +1,8 @@
+import { ClipConfig, WithRequired } from "@backend/model";
 import { BodyType } from "@data/body-type";
 import { Part } from "@data/part";
 import { invoke } from "@tauri-apps/api";
 
-export interface ClipConfig {
-    id?: number;
-    name: string;
-    body_type: BodyType;
-    part: Part;
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-    radius: number;
-    source?: string;
-    thumbnail?: Array<number>;
-    create_at?: number;
-}
-type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>
 
 /**
  * 调用新建裁剪参数API

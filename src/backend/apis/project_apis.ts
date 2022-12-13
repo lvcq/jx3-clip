@@ -1,3 +1,4 @@
+import { ProjectBrief, ProjectConfig, ProjectDetail } from "@backend/model";
 import { invoke } from "@tauri-apps/api";
 
 export async function clip_images_api(
@@ -20,40 +21,6 @@ export async function clip_images_api(
     } catch (err) {
         throw err;
     }
-}
-
-export interface FrameConfig {
-    source: string;
-    width: number;
-    height: number;
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-}
-
-export interface PartConfig {
-    images: Array<string>;
-    width: number;
-    height: number;
-    colgap: number;
-    rowgap: number;
-    cols: number;
-    frame_config?: FrameConfig
-}
-
-export interface ProjectConfig {
-    hair?: PartConfig;
-    clothes?: PartConfig;
-}
-export interface ProjectDetail {
-    name: string
-    config: ProjectConfig
-}
-
-export interface ProjectBrief {
-    name: string
-    path: string
 }
 
 export async function create_preview_api(config: ProjectConfig) {
@@ -80,10 +47,11 @@ export async function export_image(source: string, target: string, format: strin
     }
 }
 
-export async function save_project_api(detail: ProjectDetail) {
+export async function save_project_api(detail: ProjectDetail,cover:boolean) {
     try {
         await invoke("save_project_api", {
-            detail
+            detail,
+            cover
         })
     } catch (err) {
         console.log(err);

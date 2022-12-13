@@ -1,6 +1,5 @@
-import { ClipConfig } from "@backend/apis/clip_config";
-import { FrameConfig } from "@backend/apis/frame_config";
 import { load_project_api } from "@backend/apis/project_apis";
+import { ClipConfig, FrameConfig } from "@backend/model";
 import { Part } from "@data/part";
 import { atom } from "jotai";
 
@@ -332,6 +331,27 @@ export const loadProjectAtom = atom<null, string>(
     async (get, set, path) => {
         try {
             let config = await load_project_api(path);
+            if (config.hair) {
+                set(hairConfigAtom, {
+                    ...config.hair,
+                    images: config.hair.images.map(item => ({
+                        url: item,
+                        key: item
+                    })),
+                    frame: config.hair.frame_config
+                })
+            }
+            if (config.clothes) {
+                set(clothesConfigAtom, {
+                    ...config.clothes,
+                    images: config.clothes.images.map(item => ({
+                        url: item,
+                        key: item
+                    })),
+                    frame: config.clothes.frame_config
+                })
+            }
+
             console.log(config);
         } catch (err) {
 
