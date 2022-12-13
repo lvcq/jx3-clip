@@ -10,7 +10,7 @@ export const visibleAtom = atom(false);
 export const messageAtom = atom("");
 export const messageTypeAtom = atom<MessageType>("success");
 
-export const globalMessageAtom = atom<null, MessageOptions>(
+export const globalNoticeAtom = atom<null, MessageOptions>(
     null,
     (get, set, options) => {
         set(visibleAtom, true);

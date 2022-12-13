@@ -20,7 +20,7 @@ import { bodyTypeRefs, getBodyType } from "@data/body-type";
 import { JSX } from "preact";
 import { getPart, partRefs } from "@data/part";
 import { create_clip_config, get_all_clip_config, update_clip_config } from "@apis/clip_config";
-import { globalMessageAtom } from "@store/message.store";
+import { globalNoticeAtom } from "@store/message.store";
 interface SettingsProps {
 
 }
@@ -34,7 +34,7 @@ export function Settings<FC>({ }: SettingsProps) {
     const [bottom, updateBottom] = useAtom(clipBottomAtom);
     const [left, updateLeft] = useAtom(clipLeftAtom);
     const [radius, updateRadius] = useAtom(clipRadiusAtom);
-    const [, updateMessage] = useAtom(globalMessageAtom);
+    const [, updateMessage] = useAtom(globalNoticeAtom);
     const [, updateClipList] = useAtom(allClipConfigAtom);
     const [configId,updateConfigId] = useAtom(configIdAtom);
 

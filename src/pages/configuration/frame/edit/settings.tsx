@@ -7,7 +7,7 @@ import { FormItem } from "@components/form-item";
 
 import { JSX } from "preact";
 
-import { globalMessageAtom } from "@store/message.store";
+import { globalNoticeAtom } from "@store/message.store";
 import {
     frameBottomAtom,
     frameConfigListAtom,
@@ -27,7 +27,7 @@ export function Settings<FC>({ }: SettingsProps) {
     const [source, updateSource] = useAtom(frameSourceAtom);
     const [, updateDemo] = useAtom(frameDemoImageAtom);
     const [configName, updateConfigName] = useAtom(frameNameAtom);
-    const [, updateMessage] = useAtom(globalMessageAtom);
+    const [, updateMessage] = useAtom(globalNoticeAtom);
     const [, updateClipList] = useAtom(frameConfigListAtom);
     const [top, updateTop] = useAtom(frameTopAtom);
     const [right, updateRight] = useAtom(frameRightAtom);

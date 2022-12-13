@@ -1,5 +1,7 @@
 import { get_all_project_api, ProjectBrief } from "@backend/apis/project_apis";
+import { globalNoticeAtom } from "@store/message.store";
 import { WebviewWindow } from "@tauri-apps/api/window";
+import { useSetAtom } from "jotai";
 import { route } from "preact-router";
 import { useEffect, useState } from "preact/hooks"
 import { Modal } from "./global-modal"
@@ -12,7 +14,8 @@ interface OpenProjectModalProps {
 
 export function OpenProjectModal({ visible, onClose }: OpenProjectModalProps) {
     const [projectList, updateProjectList] = useState<ProjectBrief[]>([]);
-    const [activePath, updateActivePath] = useState<string>("")
+    const [activePath, updateActivePath] = useState<string>("");
+    const updateGlobalNotice = useSetAtom(globalNoticeAtom);
     useEffect(() => {
         async function getAllProject() {
             try {
@@ -27,6 +30,18 @@ export function OpenProjectModal({ visible, onClose }: OpenProjectModalProps) {
 
     function handleProjectClick(path: string) {
         updateActivePath(path);
+    }
+
+    async function handleProjectSelect() {
+        let project = projectList.find(item => item.path === activePath);
+        if (!project) {
+            updateGlobalNotice({
+                type: "warning",
+                message: "请选择项目"
+            });
+            throw Error("");
+        }
+        handleOpenProject(project.path, project.name);
     }
 
     async function handleOpenProject(path: string, name: string) {
@@ -58,7 +73,7 @@ export function OpenProjectModal({ visible, onClose }: OpenProjectModalProps) {
             route(project_path);
         }
     }
-    return <Modal visible={visible} onClose={onClose}>
+    return <Modal visible={visible} onClose={onClose} onOk={handleProjectSelect}>
         <ul className="mb-1 last-of-type:mb-0 py-2 px-4 cursor-pointer hover:bg-blue-50" style={{ width: "600px" }}>
             {
                 projectList.map(item => {

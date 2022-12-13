@@ -1,7 +1,7 @@
 import { ProjectConfig, save_project_api } from "@backend/apis/project_apis"
 import { FormItem } from "@components/form-item"
 import { Modal } from "@components/global-modal"
-import { globalMessageAtom } from "@store/message.store"
+import { globalNoticeAtom } from "@store/message.store"
 import { clothesConfigAtom, hairConfigAtom, projectNameAtom } from "@store/project.store"
 import { checkProjectExists } from "@utils/fileopt"
 import { useAtom } from "jotai"
@@ -14,7 +14,7 @@ interface SaveProjectModalProps {
 export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps) {
 
     const [projectName, updateProjectName] = useAtom(projectNameAtom);
-    const [, updateGlobalMessage] = useAtom(globalMessageAtom);
+    const [, updateGlobalMessage] = useAtom(globalNoticeAtom);
     const [hairConfig] = useAtom(hairConfigAtom);
     const [clothesConfig] = useAtom(clothesConfigAtom);
 

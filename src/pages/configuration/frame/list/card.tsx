@@ -1,7 +1,7 @@
 import { delete_frame_config, get_all_frame_config, FrameConfig } from "@backend/apis/frame_config";
 import { DividerH } from "@components/divider-h";
 import { frameConfigListAtom } from "@store/frame-config.store";
-import { globalMessageAtom } from "@store/message.store";
+import { globalNoticeAtom } from "@store/message.store";
 import { useAtom } from "jotai";
 import { route } from "preact-router";
 import { ImageViewer } from "./image-viewer";
@@ -11,7 +11,7 @@ interface CardProps {
 }
 
 export function Card<FC>({ info }: CardProps) {
-    const [message, updateMessage] = useAtom(globalMessageAtom);
+    const [message, updateMessage] = useAtom(globalNoticeAtom);
     const [list, updateConfigList] = useAtom(frameConfigListAtom)
 
     function handleGotoEdit() {

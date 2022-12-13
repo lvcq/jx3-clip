@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import { writeBinaryFile } from "@tauri-apps/api/fs";
 import { save } from "@tauri-apps/api/dialog";
-import { globalMessageAtom } from "@store/message.store";
+import { globalNoticeAtom } from "@store/message.store";
 import { homeDir } from "@tauri-apps/api/path";
 import { getFileExtension, getImageSize, getPreDirFormPath, loadLocalImage } from "@utils/fileopt";
 import { create_preview_api, export_image, ProjectConfig } from "@backend/apis/project_apis";
@@ -33,7 +33,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
     const [clothesConfig] = useAtom(clothesConfigAtom);
     const [isSaving, updateIsSaving] = useState(false);
     const [projectCache, updateProjectCache] = useAtom(projectCacheAtom);
-    const [, updateGlobalMessage] = useAtom(globalMessageAtom);
+    const [, updateGlobalMessage] = useAtom(globalNoticeAtom);
     const [centralConfig] = useAtom(centralRegionAtom);
     const [scale, updateScale] = useState(100);
     const [previewUrl, updatePreviewUrl] = useState("");

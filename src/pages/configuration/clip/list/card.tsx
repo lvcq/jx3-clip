@@ -3,7 +3,7 @@ import { DividerH } from "@components/divider-h";
 import { BodyType, getBodyTypeLabel } from "@data/body-type";
 import { getPartLabel } from "@data/part";
 import { allClipConfigAtom } from "@store/clip-config.store";
-import { globalMessageAtom } from "@store/message.store";
+import { globalNoticeAtom } from "@store/message.store";
 import { useAtom } from "jotai";
 import { route } from "preact-router";
 import { ImageViewer } from "./image-viewer";
@@ -13,7 +13,7 @@ interface CardProps {
 }
 
 export function Card<FC>({ info }: CardProps) {
-    const [message, updateMessage] = useAtom(globalMessageAtom);
+    const [message, updateMessage] = useAtom(globalNoticeAtom);
     const [list,updateConfigList]=useAtom(allClipConfigAtom)
 
     function handleGotoEdit() {
