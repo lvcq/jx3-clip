@@ -1,4 +1,4 @@
-import { ClipConfig, get_all_clip_config } from "@backend/apis/clip_config";
+import { ClipConfig } from "@backend/model";
 import { BodyType } from "@data/body-type";
 import { Part } from "@data/part";
 import { atom } from "jotai";

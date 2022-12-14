@@ -8,7 +8,8 @@ import { save } from "@tauri-apps/api/dialog";
 import { globalNoticeAtom } from "@store/message.store";
 import { homeDir } from "@tauri-apps/api/path";
 import { getFileExtension, getImageSize, getPreDirFormPath, loadLocalImage } from "@utils/fileopt";
-import { create_preview_api, export_image, ProjectConfig } from "@backend/apis/project_apis";
+import { create_preview_api, export_image } from "@backend/apis/project_apis";
+import { ProjectConfig } from "@backend/model";
 
 interface PreViewProps {
     open?: boolean;
@@ -69,8 +70,9 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                             rowgap,
                         };
                         if (frame) {
-                            let { source, width, height, top, right, bottom, left } = frame;
+                            let { source, width, height, top, right, bottom, left,name } = frame;
                             config.hair.frame_config = {
+                                name,
                                 source,
                                 width: width!,
                                 height: height!,
@@ -89,8 +91,9 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                             rowgap,
                         };
                         if (frame) {
-                            let { source, width, height, top, right, bottom, left } = frame;
+                            let { source, width, height, top, right, bottom, left,name } = frame;
                             config.clothes.frame_config = {
+                                name,
                                 source,
                                 width: width!,
                                 height: height!,

@@ -1,5 +1,5 @@
+import { FrameConfig } from "@backend/model";
 import { atom } from "jotai";
-import { FrameConfig } from "@backend/apis/frame_config";
 
 export const frameConfigAtom = atom<FrameConfig>({
     id: undefined,

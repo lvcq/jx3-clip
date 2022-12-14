@@ -1,5 +1,5 @@
-import { delete_frame_config, get_all_frame_config, FrameConfig } from "@backend/apis/frame_config";
-import { DividerH } from "@components/divider-h";
+import { delete_frame_config, get_all_frame_config } from "@backend/apis/frame_config";
+import { FrameConfig } from "@backend/model";
 import { frameConfigListAtom } from "@store/frame-config.store";
 import { globalNoticeAtom } from "@store/message.store";
 import { useAtom } from "jotai";

@@ -1,4 +1,5 @@
-import { ClipConfig, delete_clip_config, get_all_clip_config } from "@backend/apis/clip_config";
+import { delete_clip_config, get_all_clip_config } from "@backend/apis/clip_config";
+import { ClipConfig } from "@backend/model";
 import { DividerH } from "@components/divider-h";
 import { BodyType, getBodyTypeLabel } from "@data/body-type";
 import { getPartLabel } from "@data/part";
@@ -14,7 +15,7 @@ interface CardProps {
 
 export function Card<FC>({ info }: CardProps) {
     const [message, updateMessage] = useAtom(globalNoticeAtom);
-    const [list,updateConfigList]=useAtom(allClipConfigAtom)
+    const [list, updateConfigList] = useAtom(allClipConfigAtom)
 
     function handleGotoEdit() {
         if (info?.id) {

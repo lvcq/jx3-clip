@@ -1,4 +1,5 @@
-import { ClipConfig, get_all_clip_config } from "@backend/apis/clip_config";
+import { get_all_clip_config } from "@backend/apis/clip_config";
+import { ClipConfig } from "@backend/model";
 import { PageContainer } from "@components/page-container";
 import { BodyType } from "@data/body-type";
 import { Part } from "@data/part";
@@ -13,18 +14,18 @@ interface ClipConfigListPageProps {
 }
 
 export function ClipConfigListPage<FC>({ }: ClipConfigListPageProps) {
-    const [list,updateList] = useAtom(allClipConfigAtom)
+    const [list, updateList] = useAtom(allClipConfigAtom)
     const [bodyTypes, updateBodyTypes] = useState<Array<BodyType>>([BodyType.BOY, BodyType.FEMALE, BodyType.GIRL, BodyType.MALE]);
     const [parts, updateParts] = useState<Array<Part>>([Part.CLOTHES, Part.HAIR]);
     const [viewList, updateViewList] = useState<Array<ClipConfig>>([]);
-    
-    useEffect(()=>{
-        async function fetchList(){
+
+    useEffect(() => {
+        async function fetchList() {
             let clist = await get_all_clip_config();
             updateList(clist);
         }
         fetchList();
-    },[]);
+    }, []);
 
     useEffect(() => {
         let filterList = list.filter(item => bodyTypes.includes(item.body_type) && parts.includes(item.part));
