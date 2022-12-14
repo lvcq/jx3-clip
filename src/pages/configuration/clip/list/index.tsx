@@ -34,7 +34,7 @@ export function ClipConfigListPage<FC>({ }: ClipConfigListPageProps) {
 
     return <PageContainer>
         <div className="flex overflow-hidden h-full">
-            <div className="flex-1 px-3 py-4">
+            <div className="flex-1 px-3 py-4 overflow-y-auto">
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     {viewList.map(item => <Card key={item.id} info={item} />)}
                 </div>

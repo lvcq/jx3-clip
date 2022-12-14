@@ -27,7 +27,7 @@ export function FrameConfigListPage<FC>({ }: FrameConfigListPageProps) {
 
     return <PageContainer>
         <div className="box-border h-full p-4 overflow-x-auto">
-            <div className="flex">
+            <div className="flex flex-wrap">
                 {list.map(item => <Card key={item.id} info={item} />)}
             </div>
         </div>
