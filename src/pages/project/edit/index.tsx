@@ -19,6 +19,18 @@ export function ProjectEditPage<FC>({ projectPath }: ProjectEditPageProps) {
     const [, updateFrameList] = useAtom(frameConfigListAtom);
     const clearProject = useSetAtom(clearProjectAtom);
     const loadProject = useSetAtom(loadProjectAtom);
+
+    useEffect(() => {
+        const closeConfirm = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+        window.addEventListener('beforeunload', closeConfirm);
+        return () => {
+            window.removeEventListener('beforeunload', closeConfirm);
+        }
+    }, []);
+
     useEffect(() => {
         async function getAllClipConfig() {
             let list = await get_all_clip_config();
