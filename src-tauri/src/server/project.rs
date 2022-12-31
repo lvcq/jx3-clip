@@ -4,9 +4,9 @@ use image::{
     DynamicImage,
 };
 use image::{GenericImageView, ImageFormat};
-use std::thread;
 
 use super::project_config::{PartConfig, ProjectBrief, ProjectConfig, ProjectDetail};
+use crate::gpu_concat::concat_part;
 use crate::tools::datetime::now;
 use crate::tools::file_opts::{unzip_file_to_directory, zip_dir};
 use crate::tools::image_tools::{image_clip, save_image};
@@ -76,192 +76,30 @@ pub fn crate_preview(config: ProjectConfig) -> Result<String, String> {
     }
 }
 
-#[derive(Debug, Clone)]
-struct PartMessage {
-    part: String,
-    image: Option<DynamicImage>,
-}
-
-#[derive(Debug, Clone)]
-struct PartConfigItem {
-    part: String,
-    config: PartConfig,
-}
-
 fn create_part_image_with_thread(
     hair_config: &Option<PartConfig>,
     clothes_config: &Option<PartConfig>,
 ) -> Result<(Option<DynamicImage>, Option<DynamicImage>), String> {
-    let mut configs: Vec<PartConfigItem> = vec![];
     if hair_config.is_none() && clothes_config.is_none() {
         return Ok((None, None));
     }
-    if hair_config.is_some() {
-        configs.push(PartConfigItem {
-            part: String::from("hair"),
-            config: hair_config.as_ref().unwrap().clone(),
-        });
-    }
-    if clothes_config.is_some() {
-        configs.push(PartConfigItem {
-            part: String::from("clothes"),
-            config: clothes_config.as_ref().unwrap().clone(),
-        });
-    }
-    let count = configs.len();
-    let (sx, rx) = mpsc::channel::<PartMessage>();
-    for item in configs {
-        let sxc = sx.clone();
-        thread::spawn(move || {
-            let img = match create_part_image(&item.config) {
-                Ok(ig) => Some(ig),
-                Err(_) => None,
-            };
-            sxc.send(PartMessage {
-                part: item.part,
-                image: img,
-            })
-            .unwrap();
-        });
-    }
-    let mut hair: Option<DynamicImage> = None;
-    let mut clothes: Option<DynamicImage> = None;
 
-    for _ in 0..count {
-        let msg = rx.recv().unwrap();
-        if msg.part.eq("hair") {
-            hair = msg.image;
-        } else if msg.part.eq("clothes") {
-            clothes = msg.image;
-        }
-    }
+    let hair = if hair_config.is_some() {
+        Some(pollster::block_on(concat_part(
+            hair_config.as_ref().unwrap(),
+        ))?)
+    } else {
+        None
+    };
+    let clothes = if clothes_config.is_some() {
+        Some(pollster::block_on(concat_part(
+            clothes_config.as_ref().unwrap(),
+        ))?)
+    } else {
+        None
+    };
+
     Ok((hair, clothes))
-}
-
-#[derive(Debug, Clone)]
-struct RowMessage {
-    order: usize,
-    img: DynamicImage,
-}
-
-/// 创建部位图片
-fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
-    let image_width = config.width;
-    let image_height = config.height;
-
-    let (item_width, item_height, offset_top, offset_left, frame_img) = match &config.frame_config {
-        Some(frame_config) => {
-            let inner_width = frame_config.right - frame_config.left;
-            let inner_height = frame_config.bottom - frame_config.top;
-            let h_factor = (image_width as f64) / (inner_width as f64);
-            let i_width = (h_factor * (frame_config.width as f64)) as u32;
-            let o_left = ((frame_config.left as f64) * h_factor) as u32;
-            let v_factor = (image_height as f64) / (inner_height as f64);
-            let i_height = ((frame_config.height as f64) * v_factor) as u32;
-            let o_top = ((frame_config.top as f64) * v_factor) as u32;
-            let mut frame_img = read_image(&frame_config.source)?;
-            frame_img = frame_img.resize_exact(i_width, i_height, FilterType::Gaussian);
-            (i_width, i_height, o_top, o_left, Some(frame_img))
-        }
-        None => (image_width, image_height, 0 as u32, 0 as u32, None),
-    };
-    let image_count = config.images.len();
-    let col_count = if image_count as u32 > config.cols {
-        config.cols
-    } else {
-        config.images.len() as u32
-    };
-
-    let render_width = if col_count >= 1 {
-        item_width * col_count + (col_count - 1) * config.colgap
-    } else {
-        item_width
-    };
-    let row_count = ((image_count as f64) / (col_count as f64)).ceil() as u32;
-    let render_height = if row_count >= 1 {
-        item_height * row_count + (row_count - 1) * config.rowgap
-    } else {
-        item_height
-    };
-
-    let mut result = DynamicImage::new_rgba8(render_width, render_height);
-    let (sx, rx) = mpsc::channel::<RowMessage>();
-    for row in 0..row_count {
-        let start = (row * col_count) as usize;
-        let end = if ((row + 1) * col_count - 1) as usize >= image_count {
-            image_count - 1
-        } else {
-            ((row + 1) * col_count - 1) as usize
-        };
-        let row_list: Vec<String> = (&config.images[start..=end]).to_vec();
-        let order = row.clone() as usize;
-        let sxc = sx.clone();
-        let gap = config.colgap;
-        let frame_img = frame_img.clone();
-        let col_count = config.cols;
-        thread::spawn(move || {
-            let img = concat_image_row(
-                row_list,
-                render_width,
-                item_width,
-                item_height,
-                gap,
-                offset_top,
-                offset_left,
-                col_count,
-                frame_img,
-            );
-            sxc.send(RowMessage { order, img }).unwrap();
-        });
-    }
-
-    for _ in 0..row_count {
-        let received = rx.recv().unwrap();
-        let row = received.order;
-        let img = received.img;
-        let start_y = (item_height + config.rowgap) * (row as u32);
-        imageops::overlay(&mut result, &img, 0, start_y as i64);
-    }
-
-    Ok(result)
-}
-
-fn concat_image_row(
-    sources: Vec<String>,
-    render_width: u32,
-    width: u32,
-    height: u32,
-    gap: u32,
-    offset_top: u32,
-    offset_left: u32,
-    col_count: u32,
-    frame_img: Option<DynamicImage>,
-) -> DynamicImage {
-    let count = sources.len();
-    let mut result = DynamicImage::new_rgba8(render_width, height);
-    let mut index = 0;
-    let origin_x: u32 = if (count as u32) < col_count {
-        let i_width = (count as u32) * width + (count as u32 - 1) * gap;
-        (render_width - i_width) / 2
-    } else {
-        0
-    };
-    while index < count {
-        let source = sources.get(index).unwrap();
-        let item_image = read_image(source).expect("");
-        let start_x = (index as u32) * (width + gap) + origin_x;
-        imageops::overlay(
-            &mut result,
-            &item_image,
-            (offset_left + start_x).into(),
-            offset_top.into(),
-        );
-        if frame_img.is_some() {
-            imageops::overlay(&mut result, frame_img.as_ref().unwrap(), start_x.into(), 0);
-        }
-        index += 1;
-    }
-    result
 }
 
 fn read_image(src: &str) -> Result<DynamicImage, String> {

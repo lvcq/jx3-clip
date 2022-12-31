@@ -13,6 +13,7 @@ extern crate zip_archive;
 //  mods
 pub mod command;
 pub mod database;
+pub mod gpu_concat;
 pub mod menu;
 pub mod server;
 pub mod tools;
