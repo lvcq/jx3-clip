@@ -15,6 +15,7 @@ interface WorktopGridConfig {
     cols: number;
     width: number;
     height: number;
+    center: boolean
     frame?: FrameConfig
 }
 
@@ -27,7 +28,8 @@ export const hairConfigAtom = atom<WorktopGridConfig>({
     colgap: 0,
     cols: 5,
     width: 0,
-    height: 0
+    height: 0,
+    center: false
 });
 
 export const hairImagesAtom = atom<Array<ImageItem>, Array<ImageItem>>((get) => {
@@ -44,6 +46,10 @@ export const hairColgapAtom = atom<number, number>((get) => get(hairConfigAtom).
 export const hairColsAtom = atom<number, number>((get) => get(hairConfigAtom).cols, (get, set, cols) => set(hairConfigAtom, { ...get(hairConfigAtom), cols }));
 export const hairWithAtom = atom<number, number>((get) => get(hairConfigAtom).width, (get, set, width) => set(hairConfigAtom, { ...get(hairConfigAtom), width }));
 export const hairHeightAtom = atom<number, number>((get) => get(hairConfigAtom).height, (get, set, height) => set(hairConfigAtom, { ...get(hairConfigAtom), height }));
+export const hairCenterAtom = atom<boolean, boolean>(
+    (get) => get(hairConfigAtom).center,
+    (get, set, center) => set(hairConfigAtom, { ...get(hairConfigAtom), center })
+)
 export const hairFrameConfigAtom = atom<FrameConfig | undefined, FrameConfig | undefined>(
     get => get(hairConfigAtom).frame,
     (get, set, frame) => {
@@ -60,7 +66,8 @@ export const clothesConfigAtom = atom<WorktopGridConfig>({
     colgap: 0,
     cols: 5,
     width: 0,
-    height: 0
+    height: 0,
+    center: false
 });
 
 export const clothesImagesAtom = atom<Array<ImageItem>, Array<ImageItem>>((get) => get(clothesConfigAtom).images, (get, set, images) => {
@@ -92,6 +99,11 @@ export const clothesHeightAtom = atom<number, number>(
     (get) => get(clothesConfigAtom).height,
     (get, set, height) => set(clothesConfigAtom, { ...get(clothesConfigAtom), height })
 );
+
+export const clothesCenterAtom = atom<boolean, boolean>(
+    (get) => get(clothesConfigAtom).center,
+    (get, set, center) => set(clothesConfigAtom, { ...get(clothesConfigAtom), center })
+)
 
 export const clothesFrameConfigAtom = atom<FrameConfig | undefined, FrameConfig | undefined>(
     get => get(clothesConfigAtom).frame,
@@ -306,6 +318,7 @@ export const clearProjectAtom = atom(null, (get, set) => {
         width: 0,
         height: 0,
         frame: undefined,
+        center: false
     });
     set(clothesConfigAtom, {
         images: [],
@@ -315,6 +328,7 @@ export const clearProjectAtom = atom(null, (get, set) => {
         width: 0,
         height: 0,
         frame: undefined,
+        center: false
     });
     set(scaleFactorDeltaAtom, 100);
     set(selectionAtom, {

@@ -60,7 +60,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                     createKeyRef.current = key;
                     let config: ProjectConfig = {};
                     if (hairConfig.images.length) {
-                        const { images, width, height, cols, colgap, rowgap, frame } = hairConfig;
+                        const { images, width, height, cols, colgap, rowgap, frame,center } = hairConfig;
                         config.hair = {
                             images: images.map(item => item.url),
                             width,
@@ -68,6 +68,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                             cols,
                             colgap,
                             rowgap,
+                            center
                         };
                         if (frame) {
                             let { source, width, height, top, right, bottom, left,name } = frame;
@@ -81,7 +82,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                         }
                     }
                     if (clothesConfig.images.length) {
-                        const { images, width, height, cols, colgap, rowgap, frame } = clothesConfig;
+                        const { images, width, height, cols, colgap, rowgap, frame,center } = clothesConfig;
                         config.clothes = {
                             images: images.map(item => item.url),
                             width,
@@ -89,6 +90,7 @@ export function PreView<FC>({ open, onClose }: PreViewProps) {
                             cols,
                             colgap,
                             rowgap,
+                            center
                         };
                         if (frame) {
                             let { source, width, height, top, right, bottom, left,name } = frame;

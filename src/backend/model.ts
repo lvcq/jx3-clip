@@ -15,14 +15,14 @@ export interface MenuMessage {
 
 export type PayloadMessage = MenuMessage;
 
-export enum GlobalMessageTypes{
-    OpenProject= "OpenProject"
+export enum GlobalMessageTypes {
+    OpenProject = "OpenProject"
 }
 
 
-interface OpenProjectMessage{
-    type:GlobalMessageTypes.OpenProject
-    payload:undefined
+interface OpenProjectMessage {
+    type: GlobalMessageTypes.OpenProject
+    payload: undefined
 }
 
 export type GlobalMessage = OpenProjectMessage;
@@ -51,6 +51,7 @@ export interface PartConfig {
     colgap: number;
     rowgap: number;
     cols: number;
+    center: boolean;
     frame_config?: FrameConfig
 }
 

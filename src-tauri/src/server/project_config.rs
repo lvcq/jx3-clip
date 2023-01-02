@@ -14,6 +14,7 @@ pub struct PartConfig {
     pub colgap: u32,
     pub rowgap: u32,
     pub cols: u32,
+    pub center: bool,
     pub frame_config: Option<FrameConfig>,
 }
 

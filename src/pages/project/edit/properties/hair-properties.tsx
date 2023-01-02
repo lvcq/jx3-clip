@@ -1,7 +1,7 @@
 import { FormItem } from "@components/form-item";
 import { SubTitle } from "@components/sub-title";
 import { frameConfigListAtom } from "@store/frame-config.store";
-import { hairColgapAtom, hairColsAtom, hairFrameConfigAtom, hairImagesAtom, hairRowgapAtom } from "@store/project.store";
+import { hairCenterAtom, hairColgapAtom, hairColsAtom, hairFrameConfigAtom, hairImagesAtom, hairRowgapAtom } from "@store/project.store";
 import { getDivisor } from "@utils/math-helper";
 import { useAtom } from "jotai";
 import { TargetedEvent } from "preact/compat";
@@ -14,6 +14,7 @@ export function HairPOroperties<FC>() {
     const [images] = useAtom(hairImagesAtom);
     const [frame, updateFrame] = useAtom(hairFrameConfigAtom);
     const [frameList] = useAtom(frameConfigListAtom);
+    const [center, updateCenter] = useAtom(hairCenterAtom);
 
     function parseStringToNumber(source: string): number {
         let num = parseInt(source, 10) || 0
@@ -34,6 +35,11 @@ export function HairPOroperties<FC>() {
             updateFrame(undefined);
         }
     }
+    
+    function handleCenterChange(event: TargetedEvent<HTMLInputElement>) {
+        let checked = event.currentTarget.checked;
+        updateCenter(checked);
+    }
 
     return <>
         <SubTitle>头发设置</SubTitle>
@@ -42,6 +48,9 @@ export function HairPOroperties<FC>() {
                 <option value={undefined} checked={frame === undefined}>无边框</option>
                 {frameList.map(item => (<option key={item?.id} value={item?.id} checked={frame && (frame.id === item.id)}>{item.name}</option>))}
             </select>
+        </FormItem>
+        <FormItem label="是否居中">
+            <input type="checkbox" checked={center} onChange={handleCenterChange}></input>
         </FormItem>
         <FormItem label="行间距">
             <input className="w-full" type="number" value={rowgap} onChange={(evt) => handleNumberChange(evt, updateRowgap)}></input>

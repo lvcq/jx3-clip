@@ -186,6 +186,7 @@ fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
 
     let mut result = DynamicImage::new_rgba8(render_width, render_height);
     let (sx, rx) = mpsc::channel::<RowMessage>();
+    let center =config.center;
     for row in 0..row_count {
         let start = (row * col_count) as usize;
         let end = if ((row + 1) * col_count - 1) as usize >= image_count {
@@ -210,6 +211,7 @@ fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
                 offset_left,
                 col_count,
                 frame_img,
+                center
             );
             sxc.send(RowMessage { order, img }).unwrap();
         });
@@ -236,11 +238,12 @@ fn concat_image_row(
     offset_left: u32,
     col_count: u32,
     frame_img: Option<DynamicImage>,
+    center: bool,
 ) -> DynamicImage {
     let count = sources.len();
     let mut result = DynamicImage::new_rgba8(render_width, height);
     let mut index = 0;
-    let origin_x: u32 = if (count as u32) < col_count {
+    let origin_x: u32 = if (count as u32) < col_count && center {
         let i_width = (count as u32) * width + (count as u32 - 1) * gap;
         (render_width - i_width) / 2
     } else {

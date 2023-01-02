@@ -2,6 +2,7 @@ import { FormItem } from "@components/form-item";
 import { SubTitle } from "@components/sub-title";
 import { frameConfigListAtom } from "@store/frame-config.store";
 import {
+    clothesCenterAtom,
     clothesColgapAtom,
     clothesColsAtom,
     clothesFrameConfigAtom,
@@ -20,6 +21,7 @@ export function ClothesPOroperties<FC>() {
     const [images] = useAtom(clothesImagesAtom);
     const [frame, updateFrame] = useAtom(clothesFrameConfigAtom);
     const [frameList] = useAtom(frameConfigListAtom);
+    const [center, updateCenter] = useAtom(clothesCenterAtom);
 
     function parseStringToNumber(source: string): number {
         let num = parseInt(source, 10) || 0
@@ -41,6 +43,10 @@ export function ClothesPOroperties<FC>() {
         }
     }
 
+    function handleCenterChange(event: TargetedEvent<HTMLInputElement>) {
+        let checked = event.currentTarget.checked;
+        updateCenter(checked);
+    }
 
     return <>
         <SubTitle>全身设置</SubTitle>
@@ -49,6 +55,9 @@ export function ClothesPOroperties<FC>() {
                 <option value={undefined} checked={frame === undefined}>无边框</option>
                 {frameList.map(item => (<option key={item?.id} value={item?.id} checked={frame && (frame.id === item.id)}>{item.name}</option>))}
             </select>
+        </FormItem>
+        <FormItem label="是否居中">
+            <input type="checkbox" checked={center} onChange={handleCenterChange}></input>
         </FormItem>
         <FormItem label="行间距">
             <input className="w-full" type="number" value={rowgap} onChange={(evt) => handleNumberChange(evt, updateRowgap)}></input>
@@ -61,8 +70,8 @@ export function ClothesPOroperties<FC>() {
         </FormItem>
         <FormItem>
             <div className="pl-8 text-gray-400 text-sm">
-                <span >共有{cols > 0 ? Math.floor(images.length / cols) : "--"}行, 剩余{cols > 0 ? images.length % cols : "--"}张。</span><br/>
-                <span >可选列数:{images.length>0?getDivisor(images.length).join(", "):"--"}</span>
+                <span >共有{cols > 0 ? Math.floor(images.length / cols) : "--"}行, 剩余{cols > 0 ? images.length % cols : "--"}张。</span><br />
+                <span >可选列数:{images.length > 0 ? getDivisor(images.length).join(", ") : "--"}</span>
             </div>
         </FormItem>
     </>
