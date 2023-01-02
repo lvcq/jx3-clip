@@ -78,7 +78,7 @@ export function OpenProjectModal({ visible, onClose }: OpenProjectModalProps) {
         }
     }
     return <Modal visible={visible} onClose={onClose} onOk={handleProjectSelect}>
-        <div style={{ width: "800px", height: "600px", maxWidth: "80vw", maxHeight: "80wh", overflowY: "auto" }}>
+        <div style={{ width: "800px", height: "600px", maxWidth: "80vw", maxHeight: "80vh", overflowY: "auto" }}>
             <ul>
                 {
                     projectList.map(item => {
