@@ -15,6 +15,7 @@ pub struct PartConfig {
     pub rowgap: u32,
     pub cols: u32,
     pub frame_config: Option<FrameConfig>,
+    pub center: bool
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

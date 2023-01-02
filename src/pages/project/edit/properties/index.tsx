@@ -29,7 +29,7 @@ import { CommonProperties } from "./common-properties";
 import { CenterRegionProperties } from "./central-region-properties";
 import { clip_images_api } from "@backend/apis/project_apis";
 import { Settlement } from "../settlement";
-import { SaveProjectModal } from "./save-prject-modal";
+import { SaveProjectModal } from "./save-project-modal";
 
 
 export function Properties<FC>() {

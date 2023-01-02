@@ -88,7 +88,7 @@ pub async fn concat_part(config: &PartConfig) -> Result<DynamicImage, String> {
             },
         );
     }
-    let last_line_offset = if (image_count as u32) % col_count != 0 {
+    let last_line_offset = if (image_count as u32) % col_count != 0 && config.center {
         let last_line_count = (image_count as u32) % col_count;
         let last_line_width = item_width * last_line_count + (last_line_count - 1) * config.colgap;
         (render_width - last_line_width) as f32 / (render_width as f32)
@@ -196,24 +196,35 @@ pub async fn concat_part(config: &PartConfig) -> Result<DynamicImage, String> {
     }
 
     st.set_objects(objects);
-    let result = st.render().await;
+    let result = st.render().await?;
 
     Ok(result)
 }
 
 /// calculate output image size
-/// * min width 64
-/// * max width 8192
+/// * max size 65536
 /// * width must 64*n
 fn part_image_size(width: u32, height: u32) -> (u32, u32) {
-    let r_w = if width < 64 {
-        64u32
-    } else if width > 8192 {
-        8192u32
-    } else {
-        (width / 64) * 64
-    };
-    let factor = (r_w as f32) / (width as f32);
-    let r_h = (height as f32 * factor) as u32;
-    (r_w, r_h)
+    let max = 16384u32;
+    let mut r_w = width;
+    let mut r_h = height;
+    if width >= height && width > max {
+        let factor = max as f32 / width as f32;
+        r_w = max;
+        r_h = (height as f32 * factor) as u32;
+    } else if height > max {
+        let factor = max as f32 / height as f32;
+        r_h = max;
+        r_w = (width as f32 * factor) as u32;
+    }
+    if r_w < 64 {
+        r_w = 64;
+    }
+    if r_h < 64 {
+        r_h = 64;
+    }
+    let r_w_2 = if r_w % 64 == 0 { r_w } else { (r_w / 64) * 64 };
+    let factor = (r_w_2 as f32) / (r_w as f32);
+    r_h = (r_h as f32 * factor) as u32;
+    (r_w_2, r_h)
 }

@@ -298,7 +298,7 @@ fn create_project_dir(name: &str, cover: bool) -> Result<PathBuf, String> {
     }
     match fs::create_dir_all(&project_dir) {
         Ok(_) => Ok(project_dir),
-        Err(_) => Err("Create prject dir fail.".to_string()),
+        Err(_) => Err("Create project dir fail.".to_string()),
     }
 }
 

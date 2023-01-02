@@ -14,11 +14,11 @@ interface SettlementProps {
 }
 
 export function Settlement({ visible, onOk, onClose }: SettlementProps) {
-    const [hairPrice, updateHairPrice] = useState(0);
+    const [hairPrice, updateHairPrice] = useState(1);
     const [hairUnit, updateHairUnit] = useState(1);
     const [hairConfig] = useAtom(hairConfigAtom);
 
-    const [clothesPrice, updateClothesPrice] = useState(0);
+    const [clothesPrice, updateClothesPrice] = useState(1);
     const [clothesUnit, updateClothesUnit] = useState(1);
     const [clothesConfig] = useAtom(clothesConfigAtom);
 

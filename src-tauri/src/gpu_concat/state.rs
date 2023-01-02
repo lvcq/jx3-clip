@@ -26,10 +26,22 @@ impl State {
             force_fallback_adapter: false,
         };
         let adapter = instace.request_adapter(&adapter_options).await.unwrap();
+        let mut limits = wgpu::Limits::default();
+        limits.max_texture_dimension_2d = 16384;
         let (device, queue) = adapter
-            .request_device(&Default::default(), None)
+            .request_device(
+                &wgpu::DeviceDescriptor {
+                    label: None,
+                    features: wgpu::Features::empty(),
+                    limits,
+                },
+                None,
+            )
             .await
             .unwrap();
+            device.on_uncaptured_error(|err| {
+                error!("Generate image error: {:?}", err);
+            });
         let texture_desc = wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,
@@ -77,7 +89,7 @@ impl State {
         self.objects = objects;
     }
 
-    pub async fn render(&mut self) -> DynamicImage {
+    pub async fn render(&mut self) -> Result<DynamicImage, String> {
         println!("start generate image.");
         let mut encoder = self
             .device
@@ -145,16 +157,24 @@ impl State {
                 tx.send(result).unwrap();
             });
             self.device.poll(wgpu::Maintain::Wait);
-            rx.receive().await.unwrap().unwrap();
-
+            if let Some(res) = rx.receive().await {
+                if res.is_err() {
+                    return Err("Render buffer error.".to_string());
+                }
+            } else {
+                return Err("Render error.".to_string());
+            }
             let data = buffer_slice.get_mapped_range().to_vec();
 
             use image::{ImageBuffer, Rgba};
             let buffer =
-                ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(self.width, self.height, data).unwrap();
+                match ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(self.width, self.height, data) {
+                    Some(img_buffer) => img_buffer,
+                    None => return Err("Trans buffer to image error".to_string()),
+                };
             result = DynamicImage::ImageRgba8(buffer);
         }
         self.output_buffer.unmap();
-        result
+        Ok(result)
     }
 }
