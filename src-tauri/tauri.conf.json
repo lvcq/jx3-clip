@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "jx3-clip",
-    "version": "0.0.27"
+    "version": "0.0.29"
   },
   "tauri": {
     "allowlist": {
