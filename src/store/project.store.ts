@@ -26,7 +26,7 @@ export const hairConfigAtom = atom<WorktopGridConfig>({
     images: [],
     rowgap: 0,
     colgap: 0,
-    cols: 5,
+    cols: 10,
     width: 0,
     height: 0,
     center: false
@@ -64,7 +64,7 @@ export const clothesConfigAtom = atom<WorktopGridConfig>({
     images: [],
     rowgap: 0,
     colgap: 0,
-    cols: 5,
+    cols: 10,
     width: 0,
     height: 0,
     center: false
