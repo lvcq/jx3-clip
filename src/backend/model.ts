@@ -55,9 +55,15 @@ export interface PartConfig {
     frame_config?: FrameConfig
 }
 
+export interface CentralConfig {
+    v_padding: number
+}
+
 export interface ProjectConfig {
-    hair?: PartConfig;
-    clothes?: PartConfig;
+    hair?: PartConfig
+    clothes?: PartConfig
+    central?: CentralConfig
+
 }
 export interface ProjectDetail {
     name: string

@@ -3,7 +3,7 @@ import { ProjectConfig } from "@backend/model"
 import { FormItem } from "@components/form-item"
 import { Modal } from "@components/global-modal"
 import { globalNoticeAtom } from "@store/message.store"
-import { clothesConfigAtom, hairConfigAtom, projectNameAtom } from "@store/project.store"
+import { centralRegionAtom, clothesConfigAtom, hairConfigAtom, projectNameAtom } from "@store/project.store"
 import { checkProjectExists } from "@utils/fileopt"
 import { useAtom, useSetAtom } from "jotai"
 import { TargetedEvent } from "preact/compat"
@@ -18,7 +18,7 @@ export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps
     const updateGlobalNotice = useSetAtom(globalNoticeAtom);
     const [hairConfig] = useAtom(hairConfigAtom);
     const [clothesConfig] = useAtom(clothesConfigAtom);
-
+    const [centralConfig] = useAtom(centralRegionAtom);
     async function handleSave() {
         try {
             if (!projectName) {
@@ -82,6 +82,9 @@ export function SaveProjectModal<FC>({ visible, onClose }: SaveProjectModalProps
                         top, right, bottom, left
                     };
                 }
+            }
+            config.central = {
+                v_padding: centralConfig.vPadding
             }
             await save_project_api({
                 name: projectName,

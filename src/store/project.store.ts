@@ -365,6 +365,11 @@ export const loadProjectAtom = atom<null, string>(
                     frame: config.clothes.frame_config
                 })
             }
+            if (config.central) {
+                set(centralRegionAtom, {
+                    vPadding: config.central.v_padding
+                })
+            }
 
             console.log(config);
         } catch (err) {

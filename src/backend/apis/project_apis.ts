@@ -25,6 +25,7 @@ export async function clip_images_api(
 
 export async function create_preview_api(config: ProjectConfig) {
     try {
+        console.log(config);
         return await invoke<string>("create_preview_img_api", {
             config
         });

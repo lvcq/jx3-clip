@@ -60,9 +60,13 @@ pub fn clip_project_imgs(
 /// 创建预览图片
 pub fn crate_preview(config: ProjectConfig) -> Result<String, String> {
     let (hair, clothes) = create_part_image_with_thread(&config.hair, &config.clothes)?;
-
+    let vpd = if let Some(central) = config.central {
+        central.v_padding
+    } else {
+        0u32
+    };
     let result_img = match (hair, clothes) {
-        (Some(hair), Some(clothes)) => Some(concat_images(&hair, &clothes)),
+        (Some(hair), Some(clothes)) => Some(concat_images(&hair, &clothes, vpd)),
         (Some(hair), None) => Some(hair),
         (None, Some(clothes)) => Some(clothes),
         (None, None) => None,
@@ -186,7 +190,7 @@ fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
 
     let mut result = DynamicImage::new_rgba8(render_width, render_height);
     let (sx, rx) = mpsc::channel::<RowMessage>();
-    let center =config.center;
+    let center = config.center;
     for row in 0..row_count {
         let start = (row * col_count) as usize;
         let end = if ((row + 1) * col_count - 1) as usize >= image_count {
@@ -211,7 +215,7 @@ fn create_part_image(config: &PartConfig) -> Result<DynamicImage, String> {
                 offset_left,
                 col_count,
                 frame_img,
-                center
+                center,
             );
             sxc.send(RowMessage { order, img }).unwrap();
         });
@@ -282,7 +286,7 @@ fn read_image(src: &str) -> Result<DynamicImage, String> {
     }
 }
 
-fn concat_images(source1: &DynamicImage, source2: &DynamicImage) -> DynamicImage {
+fn concat_images(source1: &DynamicImage, source2: &DynamicImage, vd: u32) -> DynamicImage {
     let (width_1, height_1) = source1.dimensions();
     let (width_2, height_2) = source2.dimensions();
     let min_width = u32::min(width_1, width_2);
@@ -303,9 +307,9 @@ fn concat_images(source1: &DynamicImage, source2: &DynamicImage) -> DynamicImage
 
     let (_n_width_1, n_height_1) = render_1.dimensions();
     let (_n_width_2, n_height_2) = render_2.dimensions();
-    let mut result = DynamicImage::new_rgba8(min_width, n_height_1 + n_height_2);
+    let mut result = DynamicImage::new_rgba8(min_width, n_height_1 + n_height_2 + vd);
     imageops::overlay(&mut result, &render_1, 0, 0);
-    imageops::overlay(&mut result, &render_2, 0, n_height_1.into());
+    imageops::overlay(&mut result, &render_2, 0, (n_height_1 + vd).into());
     return result;
 }
 

@@ -4,7 +4,14 @@ use serde::{Deserialize, Serialize};
 pub struct ProjectConfig {
     pub hair: Option<PartConfig>,
     pub clothes: Option<PartConfig>,
+    pub central: Option<CentralConfig>
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CentralConfig{
+   pub v_padding: u32
+}
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PartConfig {
