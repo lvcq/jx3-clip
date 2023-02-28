@@ -38,7 +38,7 @@ export function Worktop<FC>() {
     }
 
     return <div className="h-full p-4 overflow-auto" onWheel={handleCanvasScale} onClick={handleEmptyClick}>
-        <div className="mx-auto" style={{ width: `${renderWith}px` }}>
+        <div className="mx-auto" style={{ width: `${renderWith}px`,background: "lightgray" }}>
             <WorktopGrid type={Part.HAIR} />
             <CentralRegion />
             <WorktopGridClothes type={Part.CLOTHES} />
