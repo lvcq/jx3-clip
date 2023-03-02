@@ -37,8 +37,8 @@ export function Worktop<FC>() {
         clearSelection();
     }
 
-    return <div className="h-full p-4 overflow-auto" onWheel={handleCanvasScale} onClick={handleEmptyClick}>
-        <div className="mx-auto" style={{ width: `${renderWith}px`,background: "lightgray" }}>
+    return <div className="h-full p-4 overflow-auto"  style={{background: "lightgray"}} onWheel={handleCanvasScale} onClick={handleEmptyClick}>
+        <div className="mx-auto" style={{ width: `${renderWith}px`}}>
             <WorktopGrid type={Part.HAIR} />
             <CentralRegion />
             <WorktopGridClothes type={Part.CLOTHES} />
